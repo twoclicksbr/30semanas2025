@@ -5,15 +5,16 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Sanctum\HasApiTokens;
 
-class Credential extends Model
+class Gender extends Model
 {
-    use HasFactory, HasApiTokens;
+    use HasFactory;
 
-    protected $table = 'credential'; // <- Aqui Laravel sabe qual tabela usar
+    protected $table = 'gender';
 
-    protected $fillable = ['username', 'token', 'active'];
+    protected $fillable = ['id_credential', 'name', 'active'];
+
+    protected $hidden = ['id_credential'];
 
     public function toArray()
     {
