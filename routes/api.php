@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
 use App\Http\Middleware\VerifyHeaders;
 
@@ -10,13 +10,13 @@ Route::prefix('v1')->group(function () {
     Route::middleware([VerifyHeaders::class])->group(function () {
 
         // ✅ Rotas de Credential (SEM restrição de ID)
-        Route::get('credential', [AuthController::class, 'index']);  // Listar todas
-        Route::post('credential', [AuthController::class, 'store']); // Criar nova credencial
+        Route::get('credential', [CredentialController::class, 'index']);  // Listar todas
+        Route::post('credential', [CredentialController::class, 'store']); // Criar nova credencial
 
         // ✅ Rotas de Credential (PRECISAM de {id})
-        Route::get('credential/{id}', [AuthController::class, 'show']);
-        Route::put('credential/{id}', [AuthController::class, 'update']);
-        Route::delete('credential/{id}', [AuthController::class, 'destroy']);
+        Route::get('credential/{id}', [CredentialController::class, 'show']);
+        Route::put('credential/{id}', [CredentialController::class, 'update']);
+        Route::delete('credential/{id}', [CredentialController::class, 'destroy']);
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'credential', function () {

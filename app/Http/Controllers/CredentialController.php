@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Credential;
 use Illuminate\Support\Str;
 
-class AuthController extends Controller
+class CredentialController extends Controller
 {
     public function index(Request $request)
     {
