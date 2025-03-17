@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\TypeContactController;
 use App\Http\Controllers\TypeUserController;
 use App\Http\Middleware\VerifyHeaders;
 
@@ -109,6 +110,23 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'address', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        // ✅ Rotas de TypeContact (SEM restrição de ID)
+        Route::get('type_contact', [TypeContactController::class, 'index']);  // Listar todas
+        Route::post('type_contact', [TypeContactController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de type_contact (PRECISAM de {id})
+        Route::get('type_contact/{id}', [TypeContactController::class, 'show']);
+        Route::put('type_contact/{id}', [TypeContactController::class, 'update']);
+        Route::delete('type_contact/{id}', [TypeContactController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'type_contact', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
