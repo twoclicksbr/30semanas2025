@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
+use App\Http\Controllers\TypeUserController;
 use App\Http\Middleware\VerifyHeaders;
 
 Route::prefix('v1')->group(function () {
@@ -37,6 +38,23 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'gender', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        // ✅ Rotas de TypeUser (SEM restrição de ID)
+        Route::get('type_user', [TypeUserController::class, 'index']);  // Listar todas
+        Route::post('type_user', [TypeUserController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de TypeUser (PRECISAM de {id})
+        Route::get('type_user/{id}', [TypeUserController::class, 'show']);
+        Route::put('type_user/{id}', [TypeUserController::class, 'update']);
+        Route::delete('type_user/{id}', [TypeUserController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'type_user', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
