@@ -14,6 +14,7 @@ class CredentialController extends Controller
             // Capturar parâmetros opcionais
             $ids = $request->query('id', null);
             $username = $request->query('username', null);
+            $can_request = $request->query('can_request', null);
             $active = $request->query('active', null);
 
             $perPage = $request->query('per_page', 10);
@@ -33,6 +34,14 @@ class CredentialController extends Controller
                 ], 400);
             }
 
+            // Validar o campo can_request (deve ser 0 ou 1)
+            if (!is_null($can_request) && !in_array($can_request, ['0', '1'], true)) {
+                return response()->json([
+                    'error' => 'Invalid can_request parameter',
+                    'details' => 'Allowed values: 0 (Not Authorized), 1 (Authorized)'
+                ], 400);
+            }
+
             // Criar a query base
             $query = Credential::orderBy($sortBy, $sortOrder);
 
@@ -49,6 +58,11 @@ class CredentialController extends Controller
                 $idArray = explode(',', $ids);
                 $query->whereIn('id', $idArray);
                 $appliedFilters['id'] = $idArray;
+            }
+
+            if (!is_null($can_request)) {
+                $query->where('can_request', $can_request);
+                $appliedFilters['can_request'] = $can_request;
             }
 
             if (!is_null($active)) {
@@ -90,6 +104,7 @@ class CredentialController extends Controller
                     'filters' => [
                         'id' => 'Filter by multiple IDs using comma-separated values',
                         'username' => 'Filter by username using LIKE',
+                        'can_request' => 'Check if this credential can request',
                         'active' => 'Filter by status (0 = inactive, 1 = active)',
                         'created_at_start' => 'Filter records created from this date (Y-m-d H:i:s)',
                         'created_at_end' => 'Filter records created until this date (Y-m-d H:i:s)',
@@ -147,6 +162,7 @@ class CredentialController extends Controller
             // Validar os dados enviados
             $validatedData = $request->validate([
                 'username' => 'required|string|unique:credential',
+                'can_request' => 'sometimes|integer|in:0,1',
                 'active' => 'sometimes|integer|in:0,1'
             ]);
 
@@ -189,12 +205,14 @@ class CredentialController extends Controller
 
             // Definir mensagens personalizadas para a validação
             $messages = [
-                'active.in' => 'The active field must be 1 (active) or 0 (inactive).'
+                'active.in' => 'The active field must be 1 (active) or 0 (inactive).',
+                'can_request.in' => 'The active field must be 1 (Authorized) or 0 (Not Authorized).'
             ];
 
             // Validar os dados que podem ser atualizados
             $validatedData = $request->validate([
                 'username' => 'sometimes|string|unique:credential,username,' . $id,
+                'can_request' => 'sometimes|integer|in:0,1',
                 'active' => 'sometimes|integer|in:0,1'
             ], $messages);
 
