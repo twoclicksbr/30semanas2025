@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ChurchController;
+use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
@@ -73,6 +75,40 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'group', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        // ✅ Rotas de Church (SEM restrição de ID)
+        Route::get('church', [ChurchController::class, 'index']);  // Listar todas
+        Route::post('church', [ChurchController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de church (PRECISAM de {id})
+        Route::get('church/{id}', [ChurchController::class, 'show']);
+        Route::put('church/{id}', [ChurchController::class, 'update']);
+        Route::delete('church/{id}', [ChurchController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'church', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        // ✅ Rotas de Address (SEM restrição de ID)
+        Route::get('address', [AddressController::class, 'index']);  // Listar todas
+        Route::post('address', [AddressController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de address (PRECISAM de {id})
+        Route::get('address/{id}', [AddressController::class, 'show']);
+        Route::put('address/{id}', [AddressController::class, 'update']);
+        Route::delete('address/{id}', [AddressController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'address', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'

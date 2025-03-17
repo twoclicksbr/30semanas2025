@@ -2,17 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Group;
+use App\Models\Address;
 use Illuminate\Http\Request;
 
-class GroupController extends Controller
+class AddressController extends Controller
 {
     public function index(Request $request)
     {
         try {
             $ids = $request->query('id', null);
             $idCredential = $request->query('id_credential', null);
-            $name = $request->query('name', null);
+            
+            $idParents = $request->query('id_parent', null);
+            $route = $request->query('route', null);
+            
+            $cep = $request->query('cep', null);
+            $logradouro = $request->query('logradouro', null);
+            $numero = $request->query('numero', null);
+            $complemento = $request->query('complemento', null);
+            $bairro = $request->query('bairro', null);
+            $localidade = $request->query('localidade', null);
+            $uf = $request->query('uf', null);
+
             $active = $request->query('active', null);
 
             $perPage = $request->query('per_page', 10);
@@ -24,7 +35,7 @@ class GroupController extends Controller
             $updatedStart = $request->query('updated_at_start', null);
             $updatedEnd = $request->query('updated_at_end', null);
 
-            $query = Group::orderBy($sortBy, $sortOrder);
+            $query = Address::orderBy($sortBy, $sortOrder);
 
             $appliedFilters = [
                 'sort_by' => $sortBy, 
@@ -43,9 +54,51 @@ class GroupController extends Controller
                 $query->where('id_credential', $idCredential);
                 $appliedFilters['id_credential'] = $idCredential;
             }
-            if (!is_null($name)) {
-                $query->where('name', 'LIKE', "%{$name}%");
-                $appliedFilters['name'] = $name;
+
+            if (!is_null($idParents)) {
+                $idParentArray = explode(',', $idParents);
+                $query->whereIn('id_parent', $idParentArray);
+                $appliedFilters['id_parent'] = $idParentArray;
+            }
+
+            if (!is_null($route)) {
+                $query->where('route', 'LIKE', "%{$route}%");
+                $appliedFilters['route'] = $route;
+            }
+
+            if (!is_null($cep)) {
+                $query->where('cep', $cep);
+                $appliedFilters['cep'] = $cep;
+            }
+
+            if (!is_null($logradouro)) {
+                $query->where('logradouro', 'LIKE', "%{$logradouro}%");
+                $appliedFilters['logradouro'] = $logradouro;
+            }
+
+            if (!is_null($numero)) {
+                $query->where('numero', 'LIKE', "%{$numero}%");
+                $appliedFilters['numero'] = $numero;
+            }
+
+            if (!is_null($complemento)) {
+                $query->where('complemento', 'LIKE', "%{$complemento}%");
+                $appliedFilters['complemento'] = $complemento;
+            }
+
+            if (!is_null($bairro)) {
+                $query->where('bairro', 'LIKE', "%{$bairro}%");
+                $appliedFilters['bairro'] = $bairro;
+            }
+
+            if (!is_null($localidade)) {
+                $query->where('localidade', 'LIKE', "%{$localidade}%");
+                $appliedFilters['localidade'] = $localidade;
+            }
+
+            if (!is_null($uf)) {
+                $query->where('uf', $uf);
+                $appliedFilters['uf'] = $uf;
             }
 
             if (!is_null($createdStart)) {
@@ -77,15 +130,26 @@ class GroupController extends Controller
                 $appliedFilters['active'] = $active;
             }
 
-            $groups = $query->paginate($perPage);
+            $address = $query->paginate($perPage);
 
             return response()->json([
-                'groups' => $groups,
+                'address' => $address,
                 'applied_filters' => $appliedFilters,
                 'options' => [
                     'filters' => [
                         'id' => 'Filter by multiple IDs using comma-separated values',
-                        'name' => 'Filter by gender name using LIKE',
+
+                        'id_parent' => 'Record ID I am linking the record to',
+                        'route' => 'Route name of the record',
+
+                        'cep' => 'Enter the zip code',
+                        'logradouro' => 'Enter the street address',
+                        'numero' => 'Enter the number',
+                        'complemento' => 'Enter the complement',
+                        'bairro' => 'Enter the neighborhood',
+                        'localidade' => 'Enter the location',
+                        'uf' => 'Enter the State',
+
                         'active' => 'Filter by status (0 = inactive, 1 = active)',
                         
                         'created_at_start' => 'Filter records created from this date (Y-m-d H:i:s)',
@@ -105,8 +169,30 @@ class GroupController extends Controller
             ], 200);
 
             return response()->json([
-                'groups' => $groups, 
+                'address' => $address, 
                 'applied_filters' => $appliedFilters
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error', 
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $address = Address::find($id);
+            if (!$address) {
+                return response()->json([
+                    'error' => 'Not Found', 
+                    'details' => 'Address not found'
+                ], 404);
+            }
+            return response()->json([
+                'address' => $address
             ], 200);
 
         } catch (\Exception $e) {
@@ -129,17 +215,31 @@ class GroupController extends Controller
             }
 
             $validatedData = $request->validate([
-                'name' => 'required|string|unique:group,name', 
+
+                'id_parent' => 'required|integer',
+                'route' => 'required|string',
+
+                'cep' => 'required|string',
+                'logradouro' => 'required|string',
+                'numero' => 'required|string',
+                'complemento' => 'nullable|string',
+                'bairro' => 'required|string',
+                'localidade' => 'required|string',
+                'uf' => 'required|string|size:2',
+
                 'active' => 'sometimes|integer|in:0,1'
             ]);
+
+            // Remover caracteres não numéricos do CEP
+            $validatedData['cep'] = preg_replace('/\D/', '', $validatedData['cep']);
             
             $validatedData['id_credential'] = $idCredential;
 
-            $group = Group::create($validatedData);
+            $address = Address::create($validatedData);
 
             return response()->json([
-                'message' => 'Group created successfully', 
-                'group' => $group
+                'message' => 'Address created successfully', 
+                'address' => $address
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -156,49 +256,41 @@ class GroupController extends Controller
         }
     }
 
-    public function show($id)
-    {
-        try {
-            $group = Group::find($id);
-            if (!$group) {
-                return response()->json([
-                    'error' => 'Not Found', 
-                    'details' => 'Group not found'
-                ], 404);
-            }
-            return response()->json([
-                'group' => $group
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Internal Server Error', 
-                'details' => $e->getMessage()
-            ], 500);
-        }
-    }
-
     public function update(Request $request, $id)
     {
         try {
-            $group = Group::find($id);
-            if (!$group) {
+            $address = Address::find($id);
+            if (!$address) {
                 return response()->json([
                     'error' => 'Not Found', 
-                    'details' => 'Group not found'
+                    'details' => 'Address not found'
                 ], 404);
             }
 
             $validatedData = $request->validate([
-                'name' => 'sometimes|string|unique:group,name,' . $id, 
+                
+                'id_parent' => 'required|integer',
+                'route' => 'required|string',
+
+                'cep' => 'required|string',
+                'logradouro' => 'required|string',
+                'numero' => 'required|string',
+                'complemento' => 'nullable|string',
+                'bairro' => 'required|string',
+                'localidade' => 'required|string',
+                'uf' => 'required|string|size:2',
+
                 'active' => 'sometimes|integer|in:0,1'
             ]);
 
-            $group->update($validatedData);
+            // Remover caracteres não numéricos do CEP
+            $validatedData['cep'] = preg_replace('/\D/', '', $validatedData['cep']);
+
+            $address->update($validatedData);
 
             return response()->json([
-                'message' => 'Group updated successfully', 
-                'group' => $group
+                'message' => 'Address updated successfully', 
+                'address' => $address
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -218,18 +310,18 @@ class GroupController extends Controller
     public function destroy($id)
     {
         try {
-            $group = Group::find($id);
-            if (!$group) {
+            $address = Address::find($id);
+            if (!$address) {
                 return response()->json([
                     'error' => 'Not Found', 
-                    'details' => 'Group not found'
+                    'details' => 'Address not found'
                 ], 404);
             }
 
-            $group->delete();
+            $address->delete();
 
             return response()->json([
-                'message' => 'Group deleted successfully'
+                'message' => 'Address deleted successfully'
             ], 200);
 
         } catch (\Exception $e) {

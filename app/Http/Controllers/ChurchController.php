@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Group;
+use App\Models\Church;
 use Illuminate\Http\Request;
 
-class GroupController extends Controller
+class ChurchController extends Controller
 {
     public function index(Request $request)
     {
@@ -24,7 +24,7 @@ class GroupController extends Controller
             $updatedStart = $request->query('updated_at_start', null);
             $updatedEnd = $request->query('updated_at_end', null);
 
-            $query = Group::orderBy($sortBy, $sortOrder);
+            $query = Church::orderBy($sortBy, $sortOrder);
 
             $appliedFilters = [
                 'sort_by' => $sortBy, 
@@ -77,10 +77,10 @@ class GroupController extends Controller
                 $appliedFilters['active'] = $active;
             }
 
-            $groups = $query->paginate($perPage);
+            $churchs = $query->paginate($perPage);
 
             return response()->json([
-                'groups' => $groups,
+                'churchs' => $churchs,
                 'applied_filters' => $appliedFilters,
                 'options' => [
                     'filters' => [
@@ -105,7 +105,7 @@ class GroupController extends Controller
             ], 200);
 
             return response()->json([
-                'groups' => $groups, 
+                'churchs' => $churchs, 
                 'applied_filters' => $appliedFilters
             ], 200);
 
@@ -129,17 +129,17 @@ class GroupController extends Controller
             }
 
             $validatedData = $request->validate([
-                'name' => 'required|string|unique:group,name', 
+                'name' => 'required|string|unique:church,name', 
                 'active' => 'sometimes|integer|in:0,1'
             ]);
             
             $validatedData['id_credential'] = $idCredential;
 
-            $group = Group::create($validatedData);
+            $church = Church::create($validatedData);
 
             return response()->json([
-                'message' => 'Group created successfully', 
-                'group' => $group
+                'message' => 'Church created successfully', 
+                'church' => $church
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -159,15 +159,15 @@ class GroupController extends Controller
     public function show($id)
     {
         try {
-            $group = Group::find($id);
-            if (!$group) {
+            $church = Church::find($id);
+            if (!$church) {
                 return response()->json([
                     'error' => 'Not Found', 
-                    'details' => 'Group not found'
+                    'details' => 'Church not found'
                 ], 404);
             }
             return response()->json([
-                'group' => $group
+                'church' => $church
             ], 200);
 
         } catch (\Exception $e) {
@@ -181,24 +181,24 @@ class GroupController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $group = Group::find($id);
-            if (!$group) {
+            $church = Church::find($id);
+            if (!$church) {
                 return response()->json([
                     'error' => 'Not Found', 
-                    'details' => 'Group not found'
+                    'details' => 'Church not found'
                 ], 404);
             }
 
             $validatedData = $request->validate([
-                'name' => 'sometimes|string|unique:group,name,' . $id, 
+                'name' => 'sometimes|string|unique:church,name,' . $id, 
                 'active' => 'sometimes|integer|in:0,1'
             ]);
 
-            $group->update($validatedData);
+            $church->update($validatedData);
 
             return response()->json([
-                'message' => 'Group updated successfully', 
-                'group' => $group
+                'message' => 'Church updated successfully', 
+                'church' => $church
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -218,18 +218,18 @@ class GroupController extends Controller
     public function destroy($id)
     {
         try {
-            $group = Group::find($id);
-            if (!$group) {
+            $church = Church::find($id);
+            if (!$church) {
                 return response()->json([
                     'error' => 'Not Found', 
-                    'details' => 'Group not found'
+                    'details' => 'Church not found'
                 ], 404);
             }
 
-            $group->delete();
+            $church->delete();
 
             return response()->json([
-                'message' => 'Group deleted successfully'
+                'message' => 'Church deleted successfully'
             ], 200);
 
         } catch (\Exception $e) {
