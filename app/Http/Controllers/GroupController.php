@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Gender;
+use App\Models\Group;
 use Illuminate\Http\Request;
 
-class GenderController extends Controller
+class GroupController extends Controller
 {
-    /**
-     * Listar todos os registros com filtros, paginação e ordenação.
-     */
     public function index(Request $request)
     {
         try {
@@ -27,14 +24,13 @@ class GenderController extends Controller
             $updatedStart = $request->query('updated_at_start', null);
             $updatedEnd = $request->query('updated_at_end', null);
 
-            // Criar a query base
-            $query = Gender::orderBy($sortBy, $sortOrder);
+            $query = Group::orderBy($sortBy, $sortOrder);
 
             $appliedFilters = [
-                'sort_by' => $sortBy,
-                'sort_order' => $sortOrder,
-                'per_page' => $perPage,
-                'page' => $request->query('page', 1),
+                'sort_by' => $sortBy, 
+                'sort_order' => $sortOrder, 
+                'per_page' => $perPage, 
+                'page' => $request->query('page', 1)
             ];
 
             if (!is_null($ids)) {
@@ -47,7 +43,6 @@ class GenderController extends Controller
                 $query->where('id_credential', $idCredential);
                 $appliedFilters['id_credential'] = $idCredential;
             }
-
             if (!is_null($name)) {
                 $query->where('name', 'LIKE', "%{$name}%");
                 $appliedFilters['name'] = $name;
@@ -82,10 +77,10 @@ class GenderController extends Controller
                 $appliedFilters['active'] = $active;
             }
 
-            $genders = $query->paginate($perPage);
+            $groups = $query->paginate($perPage);
 
             return response()->json([
-                'genders' => $genders,
+                'groups' => $groups,
                 'applied_filters' => $appliedFilters,
                 'options' => [
                     'filters' => [
@@ -109,6 +104,11 @@ class GenderController extends Controller
                 ]
             ], 200);
 
+            return response()->json([
+                'groups' => $groups, 
+                'applied_filters' => $appliedFilters
+            ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Internal Server Error', 
@@ -117,36 +117,29 @@ class GenderController extends Controller
         }
     }
 
-
-    /**
-     * Criar um novo registro.
-     */
     public function store(Request $request)
     {
         try {
-            // Capturar o id_credential da sessão (setado pelo middleware)
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
-                    'error' => 'Unauthorized',
+                    'error' => 'Unauthorized', 
                     'details' => 'Invalid session. Please authenticate again.'
                 ], 401);
             }
 
             $validatedData = $request->validate([
-                'name' => 'required|string|unique:gender,name',
-                'active' => 'sometimes|integer|in:0,1',
+                'name' => 'required|string|unique:group,name', 
+                'active' => 'sometimes|integer|in:0,1'
             ]);
-
-            // Adicionar automaticamente o id_credential autenticado
+            
             $validatedData['id_credential'] = $idCredential;
 
-            $gender = Gender::create($validatedData);
+            $group = Group::create($validatedData);
 
             return response()->json([
-                'message' => 'Gender created successfully',
-                'gender' => $gender,
+                'message' => 'Group created successfully', 
+                'group' => $group
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -163,75 +156,87 @@ class GenderController extends Controller
         }
     }
 
-
-    /**
-     * Exibir um registro específico.
-     */
     public function show($id)
     {
         try {
-            $gender = Gender::find($id);
-
-            if (!$gender) {
-                return response()->json(['error' => 'Not Found', 'details' => 'Gender not found'], 404);
+            $group = Group::find($id);
+            if (!$group) {
+                return response()->json([
+                    'error' => 'Not Found', 
+                    'details' => 'Group not found'
+                ], 404);
             }
-
-            return response()->json(['gender' => $gender], 200);
+            return response()->json([
+                'group' => $group
+            ], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error', 
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
-    /**
-     * Atualizar um registro específico.
-     */
     public function update(Request $request, $id)
     {
         try {
-            $gender = Gender::find($id);
-
-            if (!$gender) {
-                return response()->json(['error' => 'Not Found', 'details' => 'Gender not found'], 404);
+            $group = Group::find($id);
+            if (!$group) {
+                return response()->json([
+                    'error' => 'Not Found', 
+                    'details' => 'Group not found'
+                ], 404);
             }
 
             $validatedData = $request->validate([
-                'name' => 'sometimes|string|unique:gender,name,' . $id,
-                'active' => 'sometimes|integer|in:0,1',
+                'name' => 'sometimes|string|unique:groups,name,' . $id, 
+                'active' => 'sometimes|integer|in:0,1'
             ]);
 
-            $gender->update($validatedData);
+            $group->update($validatedData);
 
             return response()->json([
-                'message' => 'Gender updated successfully',
-                'gender' => $gender,
+                'message' => 'Group updated successfully', 
+                'group' => $group
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Validation error', 'fields' => $e->errors()], 422);
+            return response()->json([
+                'error' => 'Validation error', 
+                'fields' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error', 
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
-    /**
-     * Excluir um registro específico.
-     */
     public function destroy($id)
     {
         try {
-            $gender = Gender::find($id);
-
-            if (!$gender) {
-                return response()->json(['error' => 'Not Found', 'details' => 'Gender not found'], 404);
+            $group = Group::find($id);
+            if (!$group) {
+                return response()->json([
+                    'error' => 'Not Found', 
+                    'details' => 'Group not found'
+                ], 404);
             }
 
-            $gender->delete();
+            $group->delete();
 
-            return response()->json(['message' => 'Gender deleted successfully'], 200);
+            return response()->json([
+                'message' => 'Group deleted successfully'
+            ], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error', 
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 }

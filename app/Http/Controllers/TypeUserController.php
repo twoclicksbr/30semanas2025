@@ -13,6 +13,7 @@ class TypeUserController extends Controller
     public function index(Request $request)
     {
         try {
+            $ids = $request->query('id', null);
             $idCredential = $request->query('id_credential', null);
             $name = $request->query('name', null);
             $active = $request->query('active', null);
@@ -35,6 +36,12 @@ class TypeUserController extends Controller
                 'per_page' => $perPage,
                 'page' => $request->query('page', 1),
             ];
+
+            if (!is_null($ids)) {
+                $idArray = explode(',', $ids);
+                $query->whereIn('id', $idArray);
+                $appliedFilters['id'] = $idArray;
+            }
 
             if (!is_null($idCredential)) {
                 $query->where('id_credential', $idCredential);
@@ -82,6 +89,7 @@ class TypeUserController extends Controller
                 'applied_filters' => $appliedFilters,
                 'options' => [
                     'filters' => [
+                        'id' => 'Filter by multiple IDs using comma-separated values',
                         'name' => 'Filter by type_user name using LIKE',
                         'active' => 'Filter by status (0 = inactive, 1 = active)',
                         'created_at_start' => 'Filter records created from this date (Y-m-d H:i:s)',
