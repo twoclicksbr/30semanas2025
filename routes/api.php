@@ -5,9 +5,11 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\PersonUserController;
 use App\Http\Controllers\TypeContactController;
 use App\Http\Controllers\TypeParticipationController;
 use App\Http\Controllers\TypeUserController;
@@ -204,6 +206,30 @@ Route::prefix('v1')->group(function () {
                 'details' => 'Enter the {id} in the URL for this action'
             ], 400);
         });
+
+
+
+        // ✅ Rotas de PersonUser (SEM restrição de ID)
+        Route::get('person_user', [PersonUserController::class, 'index']);  // Listar todas
+        Route::post('person_user', [PersonUserController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de person_user (PRECISAM de {id})
+        Route::get('person_user/{id}', [PersonUserController::class, 'show']);
+        Route::put('person_user/{id}', [PersonUserController::class, 'update']);
+        Route::delete('person_user/{id}', [PersonUserController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'person_user', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        Route::post('/code/send', [EmailVerificationController::class, 'resendVerificationCode']);
+        Route::post('/code/check', [EmailVerificationController::class, 'verify']);
+
+
 
     });
 
