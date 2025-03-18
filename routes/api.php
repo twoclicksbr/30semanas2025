@@ -8,6 +8,7 @@ use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\TypeContactController;
+use App\Http\Controllers\TypeParticipationController;
 use App\Http\Controllers\TypeUserController;
 use App\Http\Middleware\VerifyHeaders;
 
@@ -32,6 +33,8 @@ Route::prefix('v1')->group(function () {
             ], 400);
         });
 
+        
+
         // ✅ Rotas de Gender (SEM restrição de ID)
         Route::get('gender', [GenderController::class, 'index']);  // Listar todas
         Route::post('gender', [GenderController::class, 'store']); // Criar novo gênero
@@ -48,6 +51,8 @@ Route::prefix('v1')->group(function () {
                 'details' => 'Enter the {id} in the URL for this action'
             ], 400);
         });
+
+
 
         // ✅ Rotas de TypeUser (SEM restrição de ID)
         Route::get('type_user', [TypeUserController::class, 'index']);  // Listar todas
@@ -66,6 +71,8 @@ Route::prefix('v1')->group(function () {
             ], 400);
         });
 
+
+
         // ✅ Rotas de Group (SEM restrição de ID)
         Route::get('group', [GroupController::class, 'index']);  // Listar todas
         Route::post('group', [GroupController::class, 'store']); // Criar novo gênero
@@ -82,6 +89,8 @@ Route::prefix('v1')->group(function () {
                 'details' => 'Enter the {id} in the URL for this action'
             ], 400);
         });
+
+
 
         // ✅ Rotas de Church (SEM restrição de ID)
         Route::get('church', [ChurchController::class, 'index']);  // Listar todas
@@ -100,6 +109,8 @@ Route::prefix('v1')->group(function () {
             ], 400);
         });
 
+
+
         // ✅ Rotas de Address (SEM restrição de ID)
         Route::get('address', [AddressController::class, 'index']);  // Listar todas
         Route::post('address', [AddressController::class, 'store']); // Criar novo gênero
@@ -116,6 +127,8 @@ Route::prefix('v1')->group(function () {
                 'details' => 'Enter the {id} in the URL for this action'
             ], 400);
         });
+
+
 
         // ✅ Rotas de TypeContact (SEM restrição de ID)
         Route::get('type_contact', [TypeContactController::class, 'index']);  // Listar todas
@@ -134,6 +147,8 @@ Route::prefix('v1')->group(function () {
             ], 400);
         });
 
+
+
         // ✅ Rotas de Contact (SEM restrição de ID)
         Route::get('contact', [ContactController::class, 'index']);  // Listar todas
         Route::post('contact', [ContactController::class, 'store']); // Criar novo gênero
@@ -145,6 +160,25 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'contact', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+
+
+        // ✅ Rotas de TypeParticipation (SEM restrição de ID)
+        Route::get('type_participation', [TypeParticipationController::class, 'index']);  // Listar todas
+        Route::post('type_participation', [TypeParticipationController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de type_participation (PRECISAM de {id})
+        Route::get('type_participation/{id}', [TypeParticipationController::class, 'show']);
+        Route::put('type_participation/{id}', [TypeParticipationController::class, 'update']);
+        Route::delete('type_participation/{id}', [TypeParticipationController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'type_participation', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
