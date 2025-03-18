@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\PersonController;
 use App\Http\Controllers\TypeContactController;
 use App\Http\Controllers\TypeParticipationController;
 use App\Http\Controllers\TypeUserController;
@@ -179,6 +180,25 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'type_participation', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+
+
+        // ✅ Rotas de Person (SEM restrição de ID)
+        Route::get('person', [PersonController::class, 'index']);  // Listar todas
+        Route::post('person', [PersonController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de person (PRECISAM de {id})
+        Route::get('person/{id}', [PersonController::class, 'show']);
+        Route::put('person/{id}', [PersonController::class, 'update']);
+        Route::delete('person/{id}', [PersonController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'person', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
