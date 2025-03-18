@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\GenderController;
@@ -127,6 +128,23 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'type_contact', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        // ✅ Rotas de Contact (SEM restrição de ID)
+        Route::get('contact', [ContactController::class, 'index']);  // Listar todas
+        Route::post('contact', [ContactController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de contact (PRECISAM de {id})
+        Route::get('contact/{id}', [ContactController::class, 'show']);
+        Route::put('contact/{id}', [ContactController::class, 'update']);
+        Route::delete('contact/{id}', [ContactController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'contact', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
