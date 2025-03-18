@@ -28,7 +28,7 @@ class EmailVerificationMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Verify Your Email')
+        return $this->subject('30 Semanas | Verificação de e-mail')
                     ->markdown('emails.verify-email')
                     ->with([
                         'userName' => $this->userName,
