@@ -11,6 +11,7 @@ use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\PersonUserController;
+use App\Http\Controllers\ShareController;
 use App\Http\Controllers\TypeContactController;
 use App\Http\Controllers\TypeParticipationController;
 use App\Http\Controllers\TypeUserController;
@@ -243,6 +244,24 @@ Route::prefix('v1')->group(function () {
 
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'celebration', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+
+        // ✅ Rotas de Share (SEM restrição de ID)
+        Route::get('share', [ShareController::class, 'index']);  // Listar todas
+        Route::post('share', [ShareController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de share (PRECISAM de {id})
+        Route::get('share/{id}', [ShareController::class, 'show']);
+        Route::put('share/{id}', [ShareController::class, 'update']);
+        Route::delete('share/{id}', [ShareController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'share', function () {
             return response()->json([
                 'error' => 'Invalid Request',
                 'details' => 'Enter the {id} in the URL for this action'
