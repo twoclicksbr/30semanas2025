@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\CelebrationController;
 use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
@@ -230,6 +231,23 @@ Route::prefix('v1')->group(function () {
         Route::post('/code/check', [EmailVerificationController::class, 'verify']);
 
 
+
+        // ✅ Rotas de Celebration (SEM restrição de ID)
+        Route::get('celebration', [CelebrationController::class, 'index']);  // Listar todas
+        Route::post('celebration', [CelebrationController::class, 'store']); // Criar novo gênero
+
+        // ✅ Rotas de celebration (PRECISAM de {id})
+        Route::get('celebration/{id}', [CelebrationController::class, 'show']);
+        Route::put('celebration/{id}', [CelebrationController::class, 'update']);
+        Route::delete('celebration/{id}', [CelebrationController::class, 'destroy']);
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'celebration', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
 
     });
 

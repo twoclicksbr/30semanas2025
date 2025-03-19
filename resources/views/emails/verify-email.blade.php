@@ -31,28 +31,3 @@
 
 </body>
 </html>
-
-
-
-{{-- @component('mail::message') --}}
-{{--  --}}
-{{-- Removendo o título automático do Laravel Mail --}}
-{{-- @slot('header') --}}
-{{-- @endslot --}}
-{{--  --}}
-{{-- <!-- Adicionando a imagem no topo --> --}}
-{{-- <img src="{{ asset('https://30semanas.com.br/assets/img/photos/bg26.jpg') }}" alt="{{ config('app.name') }}" style="width: 100%; margin-bottom: 20px;"> --}}
-{{--  --}}
-{{-- # Olá, {{ $userName }}! --}}
-{{--  --}}
-{{-- Parabéns por fazer a sua inscrição no 30Semanas. Mas antes de tudo, precisamos verificar seu e-mail, utilize o seguinte código de verificação: --}}
-{{--  --}}
-{{-- # **{{ $verificationCode }}** --}}
-{{--  --}}
-{{-- Insira este código na página de verificação para concluir seu registro. --}}
-{{--  --}}
-{{-- Se você não solicitou este cadastro, ignore este e-mail. --}}
-{{--  --}}
-{{-- Atenciosamente,<br> --}}
-{{-- {{ config('app.name') }} --}}
-{{-- @endcomponent --}}
