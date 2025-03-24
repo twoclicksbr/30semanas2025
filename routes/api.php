@@ -10,6 +10,7 @@ use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\PersonRestrictionController;
 use App\Http\Controllers\PersonUserController;
 use App\Http\Controllers\ShareController;
 use App\Http\Controllers\TypeContactController;
@@ -210,7 +211,6 @@ Route::prefix('v1')->group(function () {
         });
 
 
-
         // ✅ Rotas de PersonUser (SEM restrição de ID)
         Route::get('person_user', [PersonUserController::class, 'index']);  // Listar todas
         Route::post('person_user', [PersonUserController::class, 'store']); // Criar novo gênero
@@ -220,6 +220,9 @@ Route::prefix('v1')->group(function () {
         Route::put('person_user/{id}', [PersonUserController::class, 'update']);
         Route::delete('person_user/{id}', [PersonUserController::class, 'destroy']);
 
+        Route::post('/person_user/login', [PersonUserController::class, 'login']);
+
+
         // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
         Route::match(['put', 'delete'], 'person_user', function () {
             return response()->json([
@@ -227,7 +230,29 @@ Route::prefix('v1')->group(function () {
                 'details' => 'Enter the {id} in the URL for this action'
             ], 400);
         });
+        
+        
+        // ✅ Rotas de PersonRestriction (SEM restrição de ID)
+        Route::get('person_restriction', [PersonRestrictionController::class, 'index']);  // Listar todas
+        Route::post('person_restriction', [PersonRestrictionController::class, 'store']); // Criar novo gênero
 
+        // ✅ Rotas de person_restriction (PRECISAM de {id})
+        Route::get('person_restriction/{id}', [PersonRestrictionController::class, 'show']);
+        Route::put('person_restriction/{id}', [PersonRestrictionController::class, 'update']);
+        Route::delete('person_restriction/{id}', [PersonRestrictionController::class, 'destroy']);
+
+        Route::post('/person_restriction/login', [PersonRestrictionController::class, 'login']);
+
+
+        // ❌ Mensagem de erro apenas para endpoints que precisam de {id}, mas não receberam
+        Route::match(['put', 'delete'], 'person_restriction', function () {
+            return response()->json([
+                'error' => 'Invalid Request',
+                'details' => 'Enter the {id} in the URL for this action'
+            ], 400);
+        });
+
+        
         Route::post('/code/send', [EmailVerificationController::class, 'resendVerificationCode']);
         Route::post('/code/check', [EmailVerificationController::class, 'verify']);
 

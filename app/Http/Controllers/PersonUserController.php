@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PersonUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class PersonUserController extends Controller
 {
@@ -266,6 +267,44 @@ class PersonUserController extends Controller
             ], 500);
         }
     }
+
+
+    public function login(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|string',
+            ]);
+
+            $user = PersonUser::where('email', $validated['email'])
+                ->where('active', 1)
+                ->where('email_verified', 1)
+                ->first();
+
+            if (!$user || !Hash::check($validated['password'], $user->password)) {
+                return response()->json([
+                    'error' => 'Incorrect email or password, if the error persists, check if the email has been confirmed.'
+                ], 401);
+            }
+
+            return response()->json([
+                'id_person' => $user->id_person,
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation error',
+                'fields' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 
 
