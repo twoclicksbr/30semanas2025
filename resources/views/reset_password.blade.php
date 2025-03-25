@@ -29,18 +29,31 @@
                             <div class="alert alert-danger">{{ session('error') }}</div>
                         @endif
 
-                        <form method="POST" action="{{ route('password.update') }}">
+                        <form id="reset-password-form" method="POST" action="{{ route('password.update') }}">
                             @csrf
-
                             <input type="hidden" name="email" value="{{ $email }}">
-
+                        
+                            <div id="alert" class="mb-3"></div>
+                        
                             <div class="form-floating mb-4">
-                                <input type="password" class="form-control" name="password" required>
+                                <input type="password" class="form-control" name="password" id="password" required>
                                 <label>Nova Senha: <span class="text-orange"><i class="uil uil-asterisk"></i></span></label>
                             </div>
-
+                        
                             <button type="submit" class="btn btn-orange w-100">Atualizar Senha</button>
                         </form>
+
+                        <script>
+                            document.getElementById('reset-password-form').addEventListener('submit', function (e) {
+                                const password = document.getElementById('password').value;
+                                const alertBox = document.getElementById('alert');
+                        
+                                if (password.length < 6) {
+                                    e.preventDefault();
+                                    alertBox.innerHTML = `<div class="alert alert-danger">A senha deve ter no mínimo 6 caracteres.</div>`;
+                                }
+                            });
+                        </script>
 
                         <p class="mt-5 text-center">
                             <a href="{{ route('login') }}" class="hover text-orange">

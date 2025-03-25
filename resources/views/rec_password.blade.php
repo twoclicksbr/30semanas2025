@@ -10,7 +10,7 @@
     <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
         <div class="row">
             <div class="col-lg-8 mx-auto">
-                <h1 class="display-1 mb-3 text-white">Recuperar Senha</h1>
+                {{-- <h1 class="display-1 mb-3 text-white">Recuperar Senha</h1> --}}
             </div>
         </div>
     </div>
@@ -30,7 +30,7 @@
                             <div class="alert alert-danger">{{ session('error') }}</div>
                         @endif
 
-                        <form method="POST" action="{{ route('password.send') }}">
+                        {{-- <form method="POST" action="{{ route('password.send') }}">
                             @csrf
 
                             <div class="form-floating mb-4">
@@ -39,8 +39,67 @@
                             </div>
 
                             <button type="submit" class="btn btn-orange w-100">Enviar Código</button>
-                        </form>
+                        </form> --}}
 
+                        <form id="rec-password-form">
+                            @csrf
+                        
+                            <div id="alert" class="mb-3"></div>
+                        
+                            <div class="form-floating mb-4">
+                                <input type="email" class="form-control" name="email" id="email" required>
+                                <label for="email">Email: <span class="text-orange"><i class="uil uil-asterisk"></i></span></label>
+                            </div>
+                        
+                            <button type="submit" class="btn btn-orange w-100">Enviar Código</button>
+                        </form>
+                        
+
+                        <script>
+                            document.getElementById('rec-password-form').addEventListener('submit', async function(e) {
+                                e.preventDefault();
+                            
+                                const email = document.getElementById('email').value;
+                                const alertBox = document.getElementById('alert');
+
+                                const API_BASE_URL = "{{ config('api.base_url') }}";
+
+                                // console.log("URL base da API:", API_BASE_URL);
+
+                            
+                                try {
+                                    const response = await fetch(`${API_BASE_URL}/api/v1/rec_password`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'username': "{{ config('api.username') }}",
+                                            'token': "{{ config('api.token') }}"
+                                        },
+                                        body: JSON.stringify({ email })
+                                    });
+                            
+                                    const data = await response.json();
+
+                                    console.log("Resposta da API:", data);
+
+                            
+                                    if (response.ok) {
+                                        window.location.href = `/verify_token?email=${encodeURIComponent(email)}`;
+                                    } else {
+                                        // alertBox.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+
+                                        if (response.ok) {
+                                            window.location.href = `/verify_token?email=${encodeURIComponent(email)}`;
+                                        } else {
+                                            alertBox.innerHTML = `<div class="alert alert-danger">${data.error || 'E-mail não encontrado.'}</div>`;
+                                        }
+                                    }
+                                } catch (error) {
+                                    alertBox.innerHTML = `<div class="alert alert-danger">Erro ao conectar com a API.</div>`;
+                                }
+                            });
+                        </script>
+                        
                         <p class="mt-5 text-center">
                             <a href="{{ route('login') }}" class="hover text-orange">
                                 <i class="uil uil-signin"></i> Voltar ao Login

@@ -1,10 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChurchController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\CelebrationController;
 use App\Http\Controllers\ContactController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GenderController;
@@ -12,6 +12,9 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\PersonRestrictionController;
 use App\Http\Controllers\PersonUserController;
+
+use App\Http\Controllers\RecPasswordController;
+
 use App\Http\Controllers\ShareController;
 use App\Http\Controllers\TypeContactController;
 use App\Http\Controllers\TypeParticipationController;
@@ -255,6 +258,15 @@ Route::prefix('v1')->group(function () {
         
         Route::post('/code/send', [EmailVerificationController::class, 'resendVerificationCode']);
         Route::post('/code/check', [EmailVerificationController::class, 'verify']);
+        
+
+
+
+        Route::post('rec_password', [RecPasswordController::class, 'sendToken']);
+        Route::post('rec_password/verify', [RecPasswordController::class, 'verifyToken']);
+        Route::post('rec_password/reset', [RecPasswordController::class, 'resetPassword']);
+
+
 
 
 

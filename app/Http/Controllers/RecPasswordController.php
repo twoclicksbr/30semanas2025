@@ -7,58 +7,53 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
-class PasswordResetController extends Controller
+class RecPasswordController extends Controller
 {
-    public function showTokenForm(Request $request)
-    {
-        return view('verify_token', [
-            'email' => $request->query('email')
-        ]);
-    }
-    
-    public function showEmailForm()
-    {
-        return view('rec_password');
-    }
-
     public function sendToken(Request $request)
     {
+
+        // Log::info('📬 Requisição recebida no sendToken', $request->all());
+
         $request->validate(['email' => 'required|email']);
 
-        $user = DB::table('person_user')->select('email')->where('email', $request->email)->first();
+        $user = DB::table('person_user')->where('email', $request->email)->first();
 
+        // Log::info('🔍 Resultado do user:', ['user' => $user]);
 
         if (!$user) {
-            return redirect('/rec_password')->with('error', 'E-mail não encontrado.');
+            return response()->json(['error' => 'Email not found.'], 404);
         }
 
-        $token = Str::random(6);
+        $token = mt_rand(100000, 999999);
+
+        // Log::info('✅ Usuário encontrado:', (array) $user);
+
 
         DB::table('password_resets')->updateOrInsert(
             ['email' => $request->email],
             ['token' => $token, 'created_at' => Carbon::now()]
         );
 
-        // dd(config('mail'));
-
-        // Envia e-mail
         Mail::send('emails.reset_password_code', [
             'userName' => $user->email,
             'token' => $token,
         ], function ($message) use ($request) {
             $message->to($request->email)->subject('Código de Recuperação de Senha');
         });
-        
 
-        return view('verify_token', ['email' => $request->email]);
+        // Log::info('📨 E-mail enviado com token: ' . $token);
+
+
+        return response()->json(['message' => 'Token sent to email.']);
     }
 
     public function verifyToken(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'token' => 'required|string'
+            'token' => 'required|numeric'
         ]);
 
         $reset = DB::table('password_resets')
@@ -67,26 +62,39 @@ class PasswordResetController extends Controller
             ->first();
 
         if (!$reset) {
-            return back()->with('error', 'Invalid token.');
+            return response()->json(['error' => 'Invalid token or email.'], 400);
         }
 
-        return view('reset_password', ['email' => $request->email]);
+        return response()->json(['message' => 'Token is valid.']);
     }
+
 
     public function resetPassword(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
+            'token' => 'required|numeric',
             'password' => 'required|min:6'
         ]);
+
+        $reset = DB::table('password_resets')
+            ->where('email', $request->email)
+            ->where('token', $request->token)
+            ->first();
+
+        if (!$reset) {
+            return response()->json(['error' => 'Invalid token or email.'], 400);
+        }
 
         DB::table('person_user')
             ->where('email', $request->email)
             ->update(['password' => bcrypt($request->password)]);
 
-        DB::table('password_resets')->where('email', $request->email)->delete();
+        DB::table('password_resets')
+            ->where('email', $request->email)
+            ->delete();
 
-        return redirect()->route('login')->with('success', 'Senha alterada com Sucesso.');
+        return response()->json(['message' => 'Password updated successfully.']);
     }
-}
 
+}
