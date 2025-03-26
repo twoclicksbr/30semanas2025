@@ -10,7 +10,7 @@
     <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
         <div class="row">
             <div class="col-lg-8 mx-auto">
-                <h1 class="display-1 mb-3 text-white">Verificação</h1>
+                <h1 class="display-1 mb-3 text-white"></h1>
             </div>
         </div>
     </div>
@@ -29,7 +29,7 @@
                             <div class="alert alert-danger">{{ session('error') }}</div>
                         @endif
 
-                        <form method="POST" action="{{ route('password.verify') }}">
+                        {{-- <form method="POST" action="{{ route('password.verify') }}">
                             @csrf
 
                             <input type="hidden" name="email" value="{{ $email }}">
@@ -40,7 +40,69 @@
                             </div>
 
                             <button type="submit" class="btn btn-orange w-100">Verificar Código</button>
+                        </form> --}}
+
+                        
+
+                        <form id="verify-token-form" method="POST" action="{{ route('password.verify') }}">
+
+                            @csrf
+                            <input type="hidden" name="email" value="{{ $email }}">
+                            <div id="token-inputs" style="display: flex; gap: 10px; justify-content: center;">
+                                @for ($i = 0; $i < 6; $i++)
+                                    <input
+                                        type="text"
+                                        maxlength="1"
+                                        class="form-control text-center"
+                                        style="width: 55px; height: 60px; font-size: 32px; line-height: 60px; padding: 0;"
+                                        required
+                                    >
+                                @endfor
+                            </div>
+                            <input type="hidden" name="token" id="token">
+                            <button type="submit" class="btn btn-orange w-100 mt-4">Verificar Código</button>
                         </form>
+                        
+                        <script>
+                            const inputs = document.querySelectorAll('#token-inputs input');
+                        
+                            inputs.forEach((input, i) => {
+                                input.addEventListener('input', () => {
+                                    if (input.value.length === 1 && i < inputs.length - 1) {
+                                        inputs[i + 1].focus();
+                                    }
+                                });
+                        
+                                input.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Backspace' && input.value === '' && i > 0) {
+                                        inputs[i - 1].focus();
+                                    }
+                                });
+                        
+                                input.addEventListener('paste', (e) => {
+                                    e.preventDefault();
+                                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                                    const digits = paste.replace(/\D/g, '').slice(0, 6);
+                        
+                                    digits.split('').forEach((digit, index) => {
+                                        if (inputs[index]) {
+                                            inputs[index].value = digit;
+                                        }
+                                    });
+                        
+                                    if (inputs[digits.length - 1]) {
+                                        inputs[digits.length - 1].focus();
+                                    }
+                                });
+                            });
+                        
+                            document.getElementById('verify-token-form').addEventListener('submit', function (e) {
+                                const token = Array.from(inputs).map(input => input.value).join('');
+                                document.getElementById('token').value = token;
+                            });
+                        </script>
+                        
+                        
 
                         <p class="mt-5 text-center">
                             <a href="{{ route('login') }}" class="hover text-orange">

@@ -54,19 +54,14 @@
                             <button type="submit" class="btn btn-orange w-100">Enviar Código</button>
                         </form>
                         
-
                         <script>
                             document.getElementById('rec-password-form').addEventListener('submit', async function(e) {
                                 e.preventDefault();
-                            
+                        
                                 const email = document.getElementById('email').value;
                                 const alertBox = document.getElementById('alert');
-
                                 const API_BASE_URL = "{{ config('api.base_url') }}";
-
-                                // console.log("URL base da API:", API_BASE_URL);
-
-                            
+                        
                                 try {
                                     const response = await fetch(`${API_BASE_URL}/api/v1/rec_password`, {
                                         method: 'POST',
@@ -77,28 +72,29 @@
                                         },
                                         body: JSON.stringify({ email })
                                     });
-                            
+                        
                                     const data = await response.json();
-
                                     console.log("Resposta da API:", data);
-
-                            
+                        
                                     if (response.ok) {
                                         window.location.href = `/verify_token?email=${encodeURIComponent(email)}`;
                                     } else {
-                                        // alertBox.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-
-                                        if (response.ok) {
-                                            window.location.href = `/verify_token?email=${encodeURIComponent(email)}`;
-                                        } else {
-                                            alertBox.innerHTML = `<div class="alert alert-danger">${data.error || 'E-mail não encontrado.'}</div>`;
+                                        let msg = data.error || 'Erro desconhecido.';
+                        
+                                        if (msg === 'Email not found.') {
+                                            msg = 'E-mail não encontrado.';
+                                        } else if (msg === 'Invalid token or email.') {
+                                            msg = 'Token ou e-mail inválido.';
                                         }
+                        
+                                        alertBox.innerHTML = `<div class="alert alert-danger">${msg}</div>`;
                                     }
                                 } catch (error) {
                                     alertBox.innerHTML = `<div class="alert alert-danger">Erro ao conectar com a API.</div>`;
                                 }
                             });
                         </script>
+                        
                         
                         <p class="mt-5 text-center">
                             <a href="{{ route('login') }}" class="hover text-orange">

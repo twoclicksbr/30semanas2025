@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class RecPasswordController extends Controller
 {
@@ -49,24 +50,39 @@ class RecPasswordController extends Controller
         return response()->json(['message' => 'Token sent to email.']);
     }
 
+    
+
     public function verifyToken(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'token' => 'required|numeric'
+            'token' => 'required|numeric',
         ]);
 
-        $reset = DB::table('password_resets')
-            ->where('email', $request->email)
-            ->where('token', $request->token)
-            ->first();
+        $response = Http::withHeaders([
+            'username' => config('api.username'),
+            'token' => config('api.token'),
+        ])->post(config('api.base_url') . '/api/v1/rec_password/verify', [
+            'email' => $request->email,
+            'token' => $request->token,
+        ]);
 
-        if (!$reset) {
-            return response()->json(['error' => 'Invalid token or email.'], 400);
+        if ($response->successful()) {
+            return redirect()->route('password.reset', [
+                'email' => $request->email,
+                'token' => $request->token,
+            ]);
         }
 
-        return response()->json(['message' => 'Token is valid.']);
+        $message = $response->json('error') ?? 'Erro ao verificar o código.';
+
+        if ($message === 'Invalid token or email.') {
+            $message = 'Código ou e-mail inválido.';
+        }
+
+        return back()->with('error', $message)->withInput();
     }
+
 
 
     public function resetPassword(Request $request)

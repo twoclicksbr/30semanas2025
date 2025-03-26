@@ -5,9 +5,9 @@
 
             <div class="navbar-brand w-100">
                 <a href="{{ url('/') }}" class="logo">
-                    <img class="logo-dark" src="{{ asset('assets/img/logo-dark.png') }}"
-                        srcset="{{ asset('assets/img/logo-dark@2x.png 2x') }}" alt="Logo">
-                    <img class="logo-light" src="{{ asset('assets/img/logo-light.png') }}"
+                    <img class="logo-light" src="{{ asset('assets/img/logo.png') }}"
+                        srcset="{{ asset('assets/img/logo@2x.png 2x') }}" alt="Logo">
+                    <img class="logo-dark" src="{{ asset('assets/img/logo-light.png') }}"
                         srcset="{{ asset('assets/img/logo-light@2x.png 2x') }}" alt="Logo">
                 </a>
             </div>

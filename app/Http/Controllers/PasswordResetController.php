@@ -16,7 +16,7 @@ class PasswordResetController extends Controller
             'email' => $request->query('email')
         ]);
     }
-    
+
     public function showEmailForm()
     {
         return view('rec_password');
@@ -67,7 +67,7 @@ class PasswordResetController extends Controller
             ->first();
 
         if (!$reset) {
-            return back()->with('error', 'Invalid token.');
+            return back()->with('error', 'Código inválido.');
         }
 
         return view('reset_password', ['email' => $request->email]);

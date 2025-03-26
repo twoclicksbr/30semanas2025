@@ -27,4 +27,6 @@ Route::get('/verify_token', [PasswordResetController::class, 'showTokenForm'])->
 Route::post('/verify_token', [PasswordResetController::class, 'verifyToken'])->name('password.verify');
 
 Route::post('/reset_password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+Route::get('/reset_password', [PasswordResetController::class, 'formReset'])->name('password.reset');
+
 

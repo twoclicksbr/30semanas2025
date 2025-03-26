@@ -10,7 +10,7 @@
     <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
         <div class="row">
             <div class="col-lg-8 mx-auto">
-                <h1 class="display-1 mb-3 text-white">Nova Senha</h1>
+                {{-- <h1 class="display-1 mb-3 text-white"></h1> --}}
             </div>
         </div>
     </div>
