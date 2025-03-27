@@ -30,3 +30,5 @@ Route::post('/reset_password', [PasswordResetController::class, 'resetPassword']
 Route::get('/reset_password', [PasswordResetController::class, 'formReset'])->name('password.reset');
 
 
+
+Route::get('/admin/type_participation', function () { return view('admin.type_participation'); });
