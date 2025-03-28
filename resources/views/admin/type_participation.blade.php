@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+<x-check-session />
+
 @section('title', 'Tipo de Participação')
 
 @section('content')
@@ -1041,6 +1043,6 @@
                 }
             }
         });
-        
+
     </script>
 @endsection

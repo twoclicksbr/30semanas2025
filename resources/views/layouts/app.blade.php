@@ -36,6 +36,17 @@
 
 <body style="background-color: #f0ead9">
 
+    @if (session('error'))
+        <div class="bg-primary text-white fw-bold fs-15 mb-0">
+            <div class="container py-2 text-center">
+                <div class="d-inline-flex align-items-center gap-2">
+                    <i class="uil uil-exclamation-circle fs-22"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- <div class="page-frame "> --}}
     {{-- <div class="content-wrapper"> --}}
 
@@ -125,6 +136,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
+    <script>
+        setTimeout(() => {
+            const alertBar = document.querySelector('.bg-primary.text-white.fw-bold');
+            if (alertBar) {
+                alertBar.style.transition = 'opacity 0.5s ease';
+                alertBar.style.opacity = '0';
+                setTimeout(() => alertBar.remove(), 500);
+            }
+        }, 4000); // 4 segundos
+    </script>
 
 
 </body>
