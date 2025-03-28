@@ -31,6 +31,25 @@
                                     <i class="uil uil-credit-card-search"></i> Pesquisa
                                 </button>
 
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-soft-orange dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="uil uil-file-alt" style="margin-right: 3px"></i> Exportar
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="exportToCSV()">
+                                                <i class="uil uil-file-alt"></i> CSV
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="exportToPDF()">
+                                                <i class="uil uil-file-alt"></i> PDF
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+
                                 <div id="bulk-actions-wrapper" class="dropdown d-none">
                                     <button class="btn btn-sm btn-soft-orange dropdown-toggle" data-bs-toggle="dropdown">
                                         <i class="uil uil-cog" style="margin-right: 3px"></i> Ações
@@ -46,6 +65,7 @@
                                                     class="text-red uil uil-thumbs-down"></i> Desativar
                                                 Selecionados</a>
                                         </li>
+
                                         <li>
                                             <hr class="my-1" />
                                         </li>
@@ -366,6 +386,9 @@
         const API_URL = `{{ config('api.base_url') }}/api/v1/type_participation`;
         const username = `{{ config('api.username') }}`;
         const token = `{{ config('api.token') }}`;
+
+        const FILTER_KEY = `filtros_{{ Route::currentRouteName() }}`;
+
         let deleteId = null;
 
         let selectedIds = [];
@@ -374,6 +397,15 @@
         let sortOrder = null;
 
         let searchFilters = {};
+
+        const savedFilters = localStorage.getItem(FILTER_KEY);
+        if (savedFilters) {
+            try {
+                searchFilters = JSON.parse(savedFilters);
+            } catch (e) {
+                console.warn('Erro ao ler filtros salvos:', e);
+            }
+        }
 
         let currentPage = null;
         let lastPage = null;
@@ -398,6 +430,18 @@
                         params[key] = searchFilters[key];
                     }
                 });
+
+                // Aplica filtros salvos do localStorage se não houver filtros manuais
+                if (Object.keys(searchFilters).length === 0) {
+                    const savedFilters = localStorage.getItem(FILTER_KEY);
+                    if (savedFilters) {
+                        try {
+                            searchFilters = JSON.parse(savedFilters);
+                        } catch (e) {
+                            console.warn('Erro ao aplicar filtros salvos:', e);
+                        }
+                    }
+                }
 
                 const res = await axios.get(API_URL, {
                     headers: {
@@ -433,7 +477,9 @@
                         <tr data-id="${item.id}" onclick="toggleCheckboxFromRow(event, ${item.id})" ondblclick='openEditModal(${JSON.stringify(item)})'>
                             <td>
                                 <div class="form-check">
-                                    <input class="form-check-input row-checkbox" type="checkbox" value="${item.id}" onchange="updateBulkActions()">
+                                    
+                                    <input class="form-check-input row-checkbox" type="checkbox" value="${item.id}" onchange="updateBulkActions()" onclick="handleCheckboxClick(event)">
+
                                 </div>
                             </td>
 
@@ -479,9 +525,122 @@
             }
         }
 
+        async function exportToCSV() {
+            try {
+                const params = {
+                    ...searchFilters,
+                    per_page: 999999
+                }; // ignora paginação
+
+                const res = await axios.get(API_URL, {
+                    headers: {
+                        username,
+                        token
+                    },
+                    params
+                });
+
+                const data = res.data.type_participations.data;
+
+                if (!data.length) {
+                    showAlertModal("Nenhum dado para exportar.");
+                    return;
+                }
+
+                let csv = 'ID,Nome,Ativo\n';
+
+                data.forEach(item => {
+                    csv += `${item.id},"${item.name}",${item.active ? 'Sim' : 'Não'}\n`;
+                });
+
+                const blob = new Blob([csv], {
+                    type: 'text/csv;charset=utf-8;'
+                });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "exportacao.csv";
+                link.click();
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao exportar dados.");
+            }
+        }
+
+        async function exportToPDF() {
+            try {
+                const params = {
+                    ...searchFilters,
+                    per_page: 999999
+                };
+
+                const res = await axios.get(API_URL, {
+                    headers: {
+                        username,
+                        token
+                    },
+                    params
+                });
+
+                const data = res.data.type_participations.data;
+
+                if (!data.length) {
+                    showAlertModal("Nenhum dado para exportar.");
+                    return;
+                }
+
+                const {
+                    jsPDF
+                } = window.jspdf;
+                const doc = new jsPDF();
+
+                doc.text("Exportação - Tipo de Participação", 14, 10);
+
+                const rows = data.map(item => [
+                    item.id,
+                    item.name,
+                    item.active ? 'Sim' : 'Não'
+                ]);
+
+                doc.autoTable({
+                    head: [
+                        ['ID', 'Nome', 'Ativo']
+                    ],
+                    body: rows,
+                    startY: 20,
+                });
+
+                doc.save("exportacao.pdf");
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao exportar PDF.");
+            }
+        }
+
+        let lastChecked = null;
+
         function toggleAllCheckboxes(master) {
             document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = master.checked);
             updateBulkActions();
+        }
+
+        function handleCheckboxClick(e) {
+            const checkboxes = Array.from(document.querySelectorAll('.row-checkbox'));
+
+            if (e.shiftKey && lastChecked && lastChecked !== e.target) {
+                const start = checkboxes.indexOf(e.target);
+                const end = checkboxes.indexOf(lastChecked);
+                const [min, max] = [Math.min(start, end), Math.max(start, end)];
+
+                for (let i = min; i <= max; i++) {
+                    checkboxes[i].checked = lastChecked.checked;
+                }
+
+                updateBulkActions();
+            }
+
+            lastChecked = e.target;
         }
 
         function showAlertModal(message) {
@@ -702,6 +861,8 @@
 
             };
 
+            localStorage.setItem(FILTER_KEY, JSON.stringify(searchFilters));
+
             currentPage = 1; // volta para a primeira página
             bootstrap.Modal.getInstance(document.getElementById('searchModal')).hide(); // fecha o modal
             loadData(); // recarrega os dados com os filtros
@@ -720,6 +881,8 @@
 
         function clearSearchFilters() {
             searchFilters = {};
+            localStorage.removeItem(FILTER_KEY);
+
             currentPage = 1;
             loadData();
             const modalEl = document.getElementById('searchModal');
@@ -822,7 +985,10 @@
         });
 
         async function confirmBulkDelete() {
-            const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
+            const ids = [...document.querySelectorAll('.row-checkbox:checked')]
+                .map(cb => cb.value)
+                .filter(Boolean); // remove undefined ou vazios
+
             if (!ids.length) return;
 
             try {
@@ -836,15 +1002,14 @@
                 }
 
                 bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal')).hide();
-
                 await loadData();
                 selectedIds = [];
                 updateBulkActions();
                 document.querySelector('thead input[type="checkbox"]').checked = false;
 
             } catch (error) {
+                console.error('Erro ao excluir:', error);
                 alert('Erro ao excluir registros');
-                console.error(error);
             }
         }
 
