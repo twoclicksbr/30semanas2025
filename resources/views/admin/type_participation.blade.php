@@ -32,7 +32,8 @@
                                 </button>
 
                                 <div id="clear-filters-wrapper" class="d-none">
-                                    <button class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded" onclick="clearSearchFilters()">
+                                    <button class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded"
+                                        onclick="clearSearchFilters()">
                                         <i class="uil uil-times-circle"></i> Limpar Filtros
                                     </button>
                                 </div>
@@ -45,15 +46,18 @@
                             <div class="table-responsive">
 
                                 <div class="d-flex justify-content-between align-items-center mb-3">
+
                                     <div class="text-end">
                                         <label for="perPageSelect" class="form-label me-2 mb-0">Registros por
                                             página:</label>
-                                        <select id="perPageSelect" class="form-select form-select-sm d-inline-block w-auto"
-                                            onchange="changePerPage()">
+                                        <select id="perPageSelect" class="form-select form-select-sm d-inline-block"
+                                            style="min-width: 100px;" onchange="changePerPage()">
                                             <option value="5">5</option>
                                             <option value="10" selected>10</option>
                                             <option value="25">25</option>
                                             <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="all">Todos</option>
                                         </select>
                                     </div>
 
@@ -139,28 +143,34 @@
                         <div class="col-md-6">
                             <label class="form-label">Criado entre</label>
                             <div class="d-flex gap-2">
-                                <input type="datetime-local" class="form-control" id="search_created_start">
-                                <input type="datetime-local" class="form-control" id="search_created_end">
+                                <input type="date" class="form-control" id="search_created_start">
+                                <input type="date" class="form-control" id="search_created_end">
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Atualizado entre</label>
                             <div class="d-flex gap-2">
-                                <input type="datetime-local" class="form-control" id="search_updated_start">
-                                <input type="datetime-local" class="form-control" id="search_updated_end">
+                                <input type="date" class="form-control" id="search_updated_start">
+                                <input type="date" class="form-control" id="search_updated_end">
                             </div>
                         </div>
 
-                        <div class="col-12 d-flex justify-content-end gap-2 mt-4">
-                            <button type="button" class="btn btn-soft-orange" data-bs-dismiss="modal">
-                                <i class="uil uil-times me-1"></i> Cancelar
+                        <div class="col-12 d-flex justify-content-between align-items-center mt-4">
+                            <button type="button" class="btn btn-soft-ash btn-sm" onclick="clearSearchFields()">
+                                <i class="uil uil-eraser me-1"></i> Limpar Campos
                             </button>
 
-                            <button type="submit" class="btn btn-orange">
-                                <i class="uil uil-search me-1"></i> Confirmar
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-soft-orange" data-bs-dismiss="modal">
+                                    <i class="uil uil-times me-1"></i> Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-orange">
+                                    <i class="uil uil-search me-1"></i> Pesquisar
+                                </button>
+                            </div>
                         </div>
+
 
                     </form>
                 </div>
@@ -186,6 +196,11 @@
                             <input type="text" class="form-control" id="name" name="name" placeholder="Nome"
                                 required>
                             <label for="name">Nome</label>
+                        </div>
+
+                        <div class="mt-3 px-1 text-muted small" id="timestamps" style="display: none;">
+                            <p class="mb-1">Criado em: <span id="createdAt"></span></p>
+                            <p class="mb-0">Atualizado em: <span id="updatedAt"></span></p>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center px-1">
@@ -244,6 +259,17 @@
             </div>
         </div>
     </div>
+
+    <style>
+        select#perPageSelect {
+            max-height: none !important;
+            overflow-y: auto;
+        }
+
+        select#perPageSelect option {
+            padding: 6px 10px;
+        }
+    </style>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -345,11 +371,16 @@
         }
 
         function changePerPage() {
-            perPage = parseInt(document.getElementById('perPageSelect').value);
+            const value = document.getElementById('perPageSelect').value;
+            perPage = value === 'all' ? 999999 : parseInt(value); // define um número grande para "todos"
             currentPage = 1;
             loadData();
         }
 
+        function clearSearchFields() {
+            const form = document.getElementById('search-form');
+            form.reset();
+        }
 
         function setSort(column) {
             if (sortBy === column) {
@@ -422,6 +453,7 @@
             document.getElementById('active').checked = true;
             new bootstrap.Modal(document.getElementById('createModal')).show();
             setTimeout(() => document.getElementById('name').focus(), 300);
+            document.getElementById('timestamps').style.display = 'none';
         }
 
         function openSearchModal() {
@@ -441,10 +473,8 @@
 
         function convertToInputDateTime(value) {
             if (!value) return '';
-            const date = new Date(value.replace(' ', 'T'));
-            return date.toISOString().slice(0, 16);
+            return value.split(' ')[0]; // retorna só a parte da data (YYYY-MM-DD)
         }
-
 
         function submitSearch() {
             const form = document.getElementById('search-form');
@@ -454,10 +484,11 @@
                 id: form.search_id.value,
                 name: form.search_name.value,
                 active: form.search_active.value,
-                created_at_start: formatDateTime(form.search_created_start.value),
-                created_at_end: formatDateTime(form.search_created_end.value),
-                updated_at_start: formatDateTime(form.search_updated_start.value),
-                updated_at_end: formatDateTime(form.search_updated_end.value)
+                created_at_start: formatDateTime(form.search_created_start.value, 'start'),
+                created_at_end: formatDateTime(form.search_created_end.value, 'end'),
+                updated_at_start: formatDateTime(form.search_updated_start.value, 'start'),
+                updated_at_end: formatDateTime(form.search_updated_end.value, 'end')
+
             };
 
             currentPage = 1; // volta para a primeira página
@@ -465,9 +496,15 @@
             loadData(); // recarrega os dados com os filtros
         }
 
-        function formatDateTime(value) {
+        function formatDateTime(value, mode = null) {
             if (!value) return '';
-            return new Date(value).toISOString().slice(0, 19).replace('T', ' ');
+            const date = value; // formato: "YYYY-MM-DD"
+            if (mode === 'start') {
+                return `${date} 00:00:00`;
+            } else if (mode === 'end') {
+                return `${date} 23:59:59`;
+            }
+            return `${date} 00:00:00`;
         }
 
         function clearSearchFilters() {
@@ -485,8 +522,21 @@
             document.getElementById('name').value = item.name;
             document.getElementById('active').checked = item.active == 1;
             document.getElementById('modalTitle').innerText = 'Editar Registro';
+
+            // Preenche datas
+            document.getElementById('createdAt').innerText = formatDate(item.created_at);
+            document.getElementById('updatedAt').innerText = formatDate(item.updated_at);
+            document.getElementById('timestamps').style.display = 'block';
+
             new bootstrap.Modal(document.getElementById('createModal')).show();
             setTimeout(() => document.getElementById('name').focus(), 300);
+        }
+
+        function formatDate(dateTime) {
+            if (!dateTime) return '';
+            const date = new Date(dateTime);
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         }
 
         function submitCreate() {
