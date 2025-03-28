@@ -31,6 +31,18 @@
                                     <i class="uil uil-credit-card-search"></i> Pesquisa
                                 </button>
 
+                                <div id="bulk-actions-wrapper" class="dropdown d-none">
+                                    <button class="btn btn-sm btn-soft-orange dropdown-toggle"
+                                        data-bs-toggle="dropdown">Ações</button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#"
+                                                onclick="openBulkDeleteModal()">Excluir Selecionados</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+
                                 <div id="clear-filters-wrapper" class="d-none">
                                     <button class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded"
                                         onclick="clearSearchFilters()">
@@ -70,6 +82,13 @@
                                 <table class="table table-hover table-striped">
                                     <thead>
                                         <tr>
+                                            <th width="5%">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        onclick="toggleAllCheckboxes(this)">
+                                                </div>
+                                            </th>
+
                                             <th scope="col" nowrap width="10px" style="cursor: pointer;"
                                                 onclick="setSort('id')" data-sort="id">
                                                 Id:
@@ -260,6 +279,59 @@
         </div>
     </div>
 
+    <!-- Modal de Alerta -->
+    <div class="modal fade" id="alertModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header p-3">
+                    <h5 class="modal-title">Aviso</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p id="alertModalMessage" class="mb-0">Mensagem aqui...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de Exclusão em Massa -->
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header p-5">
+                    <h5 class="modal-title">Excluir Selecionados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0 pb-0">
+                    <p class="text-center">Tem certeza que deseja excluir os registros selecionados?</p>
+                    <div class="form-check text-start">
+                        <input class="form-check-input" type="checkbox" id="confirmBulkDeleteCheck">
+                        <label class="form-check-label" for="confirmBulkDeleteCheck">
+                            Confirmo a exclusão em massa.
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer p-2">
+                    <div class="row">
+                        <div class="col-md-12 col-lg-6">
+                            <button type="button" class="btn btn-soft-orange w-100" data-bs-dismiss="modal">
+                                <i class="uil uil-corner-up-left-alt me-1"></i> Cancelar
+                            </button>
+                        </div>
+                        <div class="col-md-12 col-lg-6">
+                            <button type="button" class="btn btn-orange w-100" onclick="confirmBulkDelete()"
+                                id="confirmBulkDeleteBtn" disabled>
+                                <i class="uil uil-trash-alt me-1"></i> Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <style>
         select#perPageSelect {
             max-height: none !important;
@@ -338,6 +410,12 @@
 
                     rows += `
                         <tr ondblclick='openEditModal(${JSON.stringify(item)})'>
+                            <td>
+                                <div class="form-check">
+                                    <input class="form-check-input row-checkbox" type="checkbox" value="${item.id}" onchange="updateBulkActions()">
+                                </div>
+                            </td>
+
                             <td>${item.id}</td>
                             <td>${item.name}</td>
                             <td class="text-center">${statusIcon}</td>
@@ -367,6 +445,35 @@
             } catch (err) {
                 console.error('Erro ao carregar dados:', err);
                 alert('Erro ao carregar dados');
+            }
+        }
+
+        function toggleAllCheckboxes(master) {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = master.checked);
+            updateBulkActions();
+        }
+
+        function showAlertModal(message) {
+            document.getElementById('alertModalMessage').innerText = message;
+            new bootstrap.Modal(document.getElementById('alertModal')).show();
+        }
+
+        function updateBulkActions() {
+            const anyChecked = document.querySelectorAll('.row-checkbox:checked').length > 0;
+            document.getElementById('bulk-actions-wrapper').classList.toggle('d-none', !anyChecked);
+        }
+
+        function bulkDelete() {
+            const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
+            if (ids.length && confirm(`Deseja excluir ${ids.length} registro(s)?`)) {
+                Promise.all(ids.map(id =>
+                    axios.delete(`${API_URL}/${id}`, {
+                        headers: {
+                            username,
+                            token
+                        }
+                    })
+                )).then(loadData).catch(() => alert('Erro ao excluir registros'));
             }
         }
 
@@ -563,7 +670,30 @@
                     bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
                     loadData();
                 })
-                .catch(() => alert('Erro ao salvar'));
+                .catch(error => {
+                    const fields = error?.response?.data?.fields;
+                    const messages = [];
+
+                    if (fields) {
+                        Object.values(fields).forEach(msgArray => {
+                            messages.push(...msgArray);
+                        });
+                    }
+
+                    if (messages.length) {
+                        let msg = messages[0];
+
+                        // Traduções personalizadas
+                        if (msg === "The name has already been taken.") {
+                            msg = "Esse nome já está em uso.";
+                        }
+
+                        showAlertModal(msg);
+                    } else {
+                        alert("Erro ao salvar");
+                    }
+                });
+
         }
 
         function openDeleteModal(id) {
@@ -576,6 +706,42 @@
         document.getElementById('confirmDeleteCheck').addEventListener('change', function() {
             document.getElementById('confirmDeleteBtn').disabled = !this.checked;
         });
+
+        function openBulkDeleteModal() {
+            document.getElementById('confirmBulkDeleteCheck').checked = false;
+            document.getElementById('confirmBulkDeleteBtn').disabled = true;
+            new bootstrap.Modal(document.getElementById('bulkDeleteModal')).show();
+        }
+
+        document.getElementById('confirmBulkDeleteCheck').addEventListener('change', function() {
+            document.getElementById('confirmBulkDeleteBtn').disabled = !this.checked;
+        });
+
+        async function confirmBulkDelete() {
+            const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
+            if (!ids.length) return;
+
+            try {
+                for (const id of ids) {
+                    await axios.delete(`${API_URL}/${id}`, {
+                        headers: {
+                            username,
+                            token
+                        }
+                    });
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal')).hide();
+
+                await loadData();
+                updateBulkActions();
+                document.querySelector('thead input[type="checkbox"]').checked = false;
+
+            } catch (error) {
+                alert('Erro ao excluir registros');
+                console.error(error);
+            }
+        }
 
         function confirmDelete() {
             if (!deleteId) return;
