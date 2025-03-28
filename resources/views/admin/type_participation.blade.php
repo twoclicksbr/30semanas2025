@@ -32,13 +32,29 @@
                                 </button>
 
                                 <div id="bulk-actions-wrapper" class="dropdown d-none">
-                                    <button class="btn btn-sm btn-soft-orange dropdown-toggle"
-                                        data-bs-toggle="dropdown">Ações</button>
+                                    <button class="btn btn-sm btn-soft-orange dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="uil uil-cog" style="margin-right: 3px"></i> Ações
+                                    </button>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a class="dropdown-item text-danger" href="#"
-                                                onclick="openBulkDeleteModal()">Excluir Selecionados</a>
+                                            <a class="dropdown-item" href="#" onclick="bulkUpdateStatus(1)"><i
+                                                    class="text-green uil uil-thumbs-up"></i> Ativar
+                                                Selecionados</a>
                                         </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" onclick="bulkUpdateStatus(0)"><i
+                                                    class="text-red uil uil-thumbs-down"></i> Desativar
+                                                Selecionados</a>
+                                        </li>
+                                        <li>
+                                            <hr class="my-1" />
+                                        </li>
+                                        <li class="bg-soft-red mt-4">
+                                            <a class="dropdown-item" href="#" onclick="openBulkDeleteModal()"><i
+                                                    class="text-red uil uil-trash-alt"></i> Excluir
+                                                Selecionados</a>
+                                        </li>
+
                                     </ul>
                                 </div>
 
@@ -352,6 +368,8 @@
         const token = `{{ config('api.token') }}`;
         let deleteId = null;
 
+        let selectedIds = [];
+
         let sortBy = null;
         let sortOrder = null;
 
@@ -364,6 +382,9 @@
         async function loadData() {
             try {
                 const params = {};
+                // Salva os checkboxes marcados
+                selectedIds = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
+
                 if (sortBy && sortOrder) {
                     params.sort_by = sortBy;
                     params.sort_order = sortOrder;
@@ -409,7 +430,7 @@
                         '<i class="text-red uil uil-thumbs-down"></i>';
 
                     rows += `
-                        <tr ondblclick='openEditModal(${JSON.stringify(item)})'>
+                        <tr data-id="${item.id}" onclick="toggleCheckboxFromRow(event, ${item.id})" ondblclick='openEditModal(${JSON.stringify(item)})'>
                             <td>
                                 <div class="form-check">
                                     <input class="form-check-input row-checkbox" type="checkbox" value="${item.id}" onchange="updateBulkActions()">
@@ -432,6 +453,16 @@
                 });
 
                 document.getElementById('data-table').innerHTML = rows;
+
+                // Reaplica os checkboxes marcados
+                selectedIds.forEach(id => {
+                    const checkbox = document.querySelector(`.row-checkbox[value="${id}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+
+                // Atualiza botão de ações conforme seleção
+                updateBulkActions();
+
                 document.getElementById('record-info').innerText =
                     `${typeParticipations.to - typeParticipations.from + 1} registros exibidos, de um total de ${typeParticipations.total}`;
 
@@ -461,7 +492,80 @@
         function updateBulkActions() {
             const anyChecked = document.querySelectorAll('.row-checkbox:checked').length > 0;
             document.getElementById('bulk-actions-wrapper').classList.toggle('d-none', !anyChecked);
+
+            // Se nenhum estiver marcado, desmarca o checkbox mestre
+            if (!anyChecked) {
+                const masterCheckbox = document.querySelector('thead input[type="checkbox"]');
+                if (masterCheckbox) masterCheckbox.checked = false;
+            }
+
         }
+
+        let lastClick = 0;
+
+        function toggleCheckboxFromRow(event, id) {
+            const now = new Date().getTime();
+            if (now - lastClick < 300) return; // ignora duplo clique
+            lastClick = now;
+
+            const tag = event.target.tagName.toLowerCase();
+            if (['a', 'button', 'i', 'input', 'label'].includes(tag)) return;
+
+            const checkbox = document.querySelector(`.row-checkbox[value="${id}"]`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                updateBulkActions();
+            }
+        }
+
+        async function bulkUpdateStatus(status) {
+            const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
+            if (!ids.length) return;
+
+            const confirmMsg = status === 1 ?
+                "Deseja ativar os registros selecionados?" :
+                "Deseja desativar os registros selecionados?";
+
+            if (!confirm(confirmMsg)) return;
+
+            // 🔒 Desabilita os itens do dropdown
+            const dropdownItems = document.querySelectorAll('#bulk-actions-wrapper .dropdown-item');
+            dropdownItems.forEach(item => item.classList.add('disabled'));
+
+            try {
+                for (const id of ids) {
+                    await axios.put(`${API_URL}/${id}`, {
+                        active: status
+                    }, {
+                        headers: {
+                            username,
+                            token
+                        }
+                    });
+                }
+
+                await loadData();
+                updateBulkActions();
+                selectedIds = [];
+
+            } catch (error) {
+                alert("Erro ao atualizar status");
+                console.error(error);
+            } finally {
+                // 🔓 Reabilita os itens do dropdown
+                dropdownItems.forEach(item => item.classList.remove('disabled'));
+
+                // Desmarca todos os checkboxes (inclusive o mestre)
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+                const masterCheckbox = document.querySelector('thead input[type="checkbox"]');
+                if (masterCheckbox) masterCheckbox.checked = false;
+
+                // Atualiza visualmente o botão de ações
+                updateBulkActions();
+
+            }
+        }
+
 
         function bulkDelete() {
             const ids = [...document.querySelectorAll('.row-checkbox:checked')].map(cb => cb.value);
@@ -734,6 +838,7 @@
                 bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal')).hide();
 
                 await loadData();
+                selectedIds = [];
                 updateBulkActions();
                 document.querySelector('thead input[type="checkbox"]').checked = false;
 
