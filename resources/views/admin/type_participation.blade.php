@@ -3,14 +3,10 @@
 @section('title', 'Tipo de Participação')
 
 @section('content')
-    <section class="wrapper image-wrapper bg-image bg-overlay bg-overlay-light-100 text-white"
-        data-image-src="https://30semanas.com.br/assets/img/photos/bg26.jpg">
-        <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
-            <div class="row">
-                <div class="col-lg-8 mx-auto"></div>
-            </div>
-        </div>
-    </section>
+
+    <x-page-header>
+        {{-- Conteúdo opcional aqui --}}
+    </x-page-header>
 
     <section class="wrapper mb-10">
         <div class="container pb-14 pb-md-16">
@@ -1029,5 +1025,22 @@
         }
 
         loadData();
+
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && !e.shiftKey && !e.ctrlKey) {
+                const key = e.key.toLowerCase();
+
+                if (key === 'n') {
+                    e.preventDefault();
+                    openCreateModal();
+                }
+
+                if (key === 'p') {
+                    e.preventDefault();
+                    openSearchModal();
+                }
+            }
+        });
+        
     </script>
 @endsection
