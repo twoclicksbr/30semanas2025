@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\TypeParticipation;
 use Illuminate\Http\Request;
+use App\Helpers\LogHelper;
+
 
 class TypeParticipationController extends Controller
 {
@@ -81,8 +83,30 @@ class TypeParticipationController extends Controller
                 $query->where('active', $active);
                 $appliedFilters['active'] = $active;
             }
-
+            
             $typeParticipations = $query->paginate($perPage);
+
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'type_participation',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
 
             return response()->json([
                 'type_participations' => $typeParticipations,
@@ -124,9 +148,15 @@ class TypeParticipationController extends Controller
     public function store(Request $request)
     {
         try {
-            // Capturar o id_credential da sessão (setado pelo middleware)
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -139,10 +169,20 @@ class TypeParticipationController extends Controller
                 'active' => 'sometimes|integer|in:0,1',
             ]);
 
-            // Adicionar automaticamente o id_credential autenticado
             $validatedData['id_credential'] = $idCredential;
 
             $typeParticipation = TypeParticipation::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'type_participation',
+                $typeParticipation->id,
+                null,
+                $typeParticipation,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'TypeParticipation created successfully',
@@ -164,24 +204,55 @@ class TypeParticipationController extends Controller
     }
 
 
+
     /**
      * Exibir um registro específico.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $typeParticipation = TypeParticipation::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $typeParticipation = TypeParticipation::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$typeParticipation) {
-                return response()->json(['error' => 'Not Found', 'details' => 'TypeParticipation not found'], 404);
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'TypeParticipation not found'
+                ], 404);
             }
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'type_participation',
+                $typeParticipation->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['type_participation' => $typeParticipation], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     /**
      * Atualizar um registro específico.
@@ -189,49 +260,129 @@ class TypeParticipationController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $typeParticipation = TypeParticipation::find($id);
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
+            $typeParticipation = TypeParticipation::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$typeParticipation) {
-                return response()->json(['error' => 'Not Found', 'details' => 'TypeParticipation not found'], 404);
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'TypeParticipation not found'
+                ], 404);
             }
 
             $validatedData = $request->validate([
-                'name' => 'sometimes|string|unique:type_participation,name,' . $id,
+                'name' => 'required|string|unique:type_participation,name,' . $id,
                 'active' => 'sometimes|integer|in:0,1',
             ]);
 
+            $oldData = $typeParticipation->toArray();
             $typeParticipation->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'type_participation',
+                $typeParticipation->id,
+                $oldData,
+                $typeParticipation,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'TypeParticipation updated successfully',
                 'type_participation' => $typeParticipation,
-            ], 200);
+            ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Validation error', 'fields' => $e->errors()], 422);
+            return response()->json([
+                'error' => 'Validation error',
+                'fields' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     /**
      * Excluir um registro específico.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-            $typeParticipation = TypeParticipation::find($id);
-
-            if (!$typeParticipation) {
-                return response()->json(['error' => 'Not Found', 'details' => 'TypeParticipation not found'], 404);
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
             }
 
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
+            $typeParticipation = TypeParticipation::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
+            if (!$typeParticipation) {
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'TypeParticipation not found'
+                ], 404);
+            }
+
+            $oldData = $typeParticipation->toArray();
             $typeParticipation->delete();
 
-            return response()->json(['message' => 'TypeParticipation deleted successfully'], 200);
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'type_participation',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json([
+                'message' => 'TypeParticipation deleted successfully'
+            ]);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
+
 }

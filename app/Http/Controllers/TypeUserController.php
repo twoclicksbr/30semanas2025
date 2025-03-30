@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TypeUser;
 use Illuminate\Http\Request;
+use App\Helpers\LogHelper;
 
 class TypeUserController extends Controller
 {
@@ -84,6 +85,28 @@ class TypeUserController extends Controller
 
             $typeUsers = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'type_user',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'type_users' => $typeUsers,
                 'applied_filters' => $appliedFilters,
@@ -119,7 +142,21 @@ class TypeUserController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
 
             if (!$idCredential) {
                 return response()->json([
@@ -137,6 +174,17 @@ class TypeUserController extends Controller
 
             $typeUser = TypeUser::create($validatedData);
 
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'type_user',
+                $typeUser->id,
+                null,
+                $typeUser,
+                $idPerson,
+                $idCredential
+            );
+
             return response()->json([
                 'message' => 'TypeUser created successfully',
                 'type_user' => $typeUser,
@@ -152,19 +200,48 @@ class TypeUserController extends Controller
     /**
      * Exibir um registro específico.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $typeUser = TypeUser::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $typeUser = TypeUser::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$typeUser) {
-                return response()->json(['error' => 'Not Found', 'details' => 'TypeUser not found'], 404);
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'TypeUser not found'
+                ], 404);
             }
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'type_user',
+                $typeUser->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['type_user' => $typeUser], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -174,6 +251,22 @@ class TypeUserController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $typeUser = TypeUser::find($id);
 
             if (!$typeUser) {
@@ -185,7 +278,19 @@ class TypeUserController extends Controller
                 'active' => 'sometimes|integer|in:0,1',
             ]);
 
+            $oldData = $typeUser->toArray();
             $typeUser->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'type_user',
+                $typeUser->id,
+                $oldData,
+                $typeUser,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'TypeUser updated successfully',
@@ -202,16 +307,44 @@ class TypeUserController extends Controller
     /**
      * Excluir um registro específico.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-            $typeUser = TypeUser::find($id);
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
 
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
+            $typeUser = TypeUser::find($id);
+            
             if (!$typeUser) {
                 return response()->json(['error' => 'Not Found', 'details' => 'TypeUser not found'], 404);
             }
-
+            
+            $oldData = $typeUser->toArray();
             $typeUser->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'type_user',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['message' => 'TypeUser deleted successfully'], 200);
 
