@@ -408,10 +408,33 @@ class PersonUserController extends Controller
                 ->first();
 
             if (!$user || !Hash::check($validated['password'], $user->password)) {
+
+                // Log da tentativa de login falha
+                LogHelper::store(
+                    'login_failed',
+                    'person_user',
+                    null,
+                    ['email' => $validated['email']],
+                    null,
+                    null,
+                    null
+                );
+
                 return response()->json([
                     'error' => 'Incorrect email or password, if the error persists, check if the email has been confirmed.'
                 ], 401);
             }
+
+            // Log da tentativa de login bem-sucedida
+            LogHelper::store(
+                'login_success',
+                'person_user',
+                $user->id,
+                null,
+                null,
+                $user->id_person,
+                $user->id_credential
+            );
 
             return response()->json([
                 'id_person' => $user->id_person,
@@ -429,6 +452,7 @@ class PersonUserController extends Controller
             ], 500);
         }
     }
+
 
 
 
