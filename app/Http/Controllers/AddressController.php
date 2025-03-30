@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Address;
 use Illuminate\Http\Request;
 
@@ -132,6 +133,28 @@ class AddressController extends Controller
 
             $address = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'address',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'address' => $address,
                 'applied_filters' => $appliedFilters,
@@ -181,23 +204,46 @@ class AddressController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $address = Address::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $address = Address::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
             if (!$address) {
                 return response()->json([
-                    'error' => 'Not Found', 
+                    'error' => 'Not Found',
                     'details' => 'Address not found'
                 ], 404);
             }
-            return response()->json([
-                'address' => $address
-            ], 200);
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'address',
+                $address->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['address' => $address], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Internal Server Error', 
+                'error' => 'Internal Server Error',
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -206,10 +252,18 @@ class AddressController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
             if (!$idCredential) {
                 return response()->json([
-                    'error' => 'Unauthorized', 
+                    'error' => 'Unauthorized',
                     'details' => 'Invalid session. Please authenticate again.'
                 ], 401);
             }
@@ -237,6 +291,17 @@ class AddressController extends Controller
 
             $address = Address::create($validatedData);
 
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'address',
+                $address->id,
+                null,
+                $address,
+                $idPerson,
+                $idCredential
+            );
+
             return response()->json([
                 'message' => 'Address created successfully', 
                 'address' => $address
@@ -259,6 +324,22 @@ class AddressController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $address = Address::find($id);
             if (!$address) {
                 return response()->json([
@@ -286,7 +367,19 @@ class AddressController extends Controller
             // Remover caracteres não numéricos do CEP
             $validatedData['cep'] = preg_replace('/\D/', '', $validatedData['cep']);
 
+            $oldData = $address->toArray();
             $address->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'address',
+                $address->id,
+                $oldData,
+                $address,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Address updated successfully', 
@@ -307,9 +400,25 @@ class AddressController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $address = Address::find($id);
             if (!$address) {
                 return response()->json([
@@ -318,7 +427,19 @@ class AddressController extends Controller
                 ], 404);
             }
 
+            $oldData = $address->toArray();
             $address->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'address',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Address deleted successfully'

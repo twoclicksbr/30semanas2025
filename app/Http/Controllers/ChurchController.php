@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Church;
 use Illuminate\Http\Request;
 
@@ -79,6 +80,28 @@ class ChurchController extends Controller
 
             $churchs = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'church',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'churchs' => $churchs,
                 'applied_filters' => $appliedFilters,
@@ -120,10 +143,18 @@ class ChurchController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
             if (!$idCredential) {
                 return response()->json([
-                    'error' => 'Unauthorized', 
+                    'error' => 'Unauthorized',
                     'details' => 'Invalid session. Please authenticate again.'
                 ], 401);
             }
@@ -136,6 +167,17 @@ class ChurchController extends Controller
             $validatedData['id_credential'] = $idCredential;
 
             $church = Church::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'church',
+                $church->id,
+                null,
+                $church,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Church created successfully', 
@@ -156,23 +198,46 @@ class ChurchController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $church = Church::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $church = Church::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
             if (!$church) {
                 return response()->json([
-                    'error' => 'Not Found', 
+                    'error' => 'Not Found',
                     'details' => 'Church not found'
                 ], 404);
             }
-            return response()->json([
-                'church' => $church
-            ], 200);
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'church',
+                $church->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['church' => $church], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Internal Server Error', 
+                'error' => 'Internal Server Error',
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -181,6 +246,22 @@ class ChurchController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $church = Church::find($id);
             if (!$church) {
                 return response()->json([
@@ -194,7 +275,19 @@ class ChurchController extends Controller
                 'active' => 'sometimes|integer|in:0,1'
             ]);
 
+            $oldData = $church->toArray();
             $church->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'church',
+                $church->id,
+                $oldData,
+                $church,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Church updated successfully', 
@@ -215,9 +308,25 @@ class ChurchController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $church = Church::find($id);
             if (!$church) {
                 return response()->json([
@@ -226,7 +335,19 @@ class ChurchController extends Controller
                 ], 404);
             }
 
+            $oldData = $church->toArray();
             $church->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'church',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Church deleted successfully'

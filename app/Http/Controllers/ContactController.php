@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Contact;
 use App\Models\TypeContact;
 use Illuminate\Http\Request;
@@ -103,6 +104,28 @@ class ContactController extends Controller
 
             $contact = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'contact',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'contact' => $contact,
                 'applied_filters' => $appliedFilters,
@@ -145,23 +168,46 @@ class ContactController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $contact = Contact::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $contact = Contact::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
             if (!$contact) {
                 return response()->json([
-                    'error' => 'Not Found', 
+                    'error' => 'Not Found',
                     'details' => 'Contact not found'
                 ], 404);
             }
-            return response()->json([
-                'contact' => $contact
-            ], 200);
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'contact',
+                $contact->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['contact' => $contact], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Internal Server Error', 
+                'error' => 'Internal Server Error',
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -170,10 +216,18 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
             if (!$idCredential) {
                 return response()->json([
-                    'error' => 'Unauthorized', 
+                    'error' => 'Unauthorized',
                     'details' => 'Invalid session. Please authenticate again.'
                 ], 401);
             }
@@ -229,6 +283,17 @@ class ContactController extends Controller
 
             $contact = Contact::create($validatedData);
 
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'contact',
+                $contact->id,
+                null,
+                $contact,
+                $idPerson,
+                $idCredential
+            );
+
             return response()->json([
                 'message' => 'Contact created successfully', 
                 'contact' => $contact
@@ -251,6 +316,22 @@ class ContactController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $contact = Contact::find($id);
             if (!$contact) {
                 return response()->json([
@@ -304,8 +385,20 @@ class ContactController extends Controller
             if ($typeContact->input_type === 'email' && !filter_var($validatedData['value'], FILTER_VALIDATE_EMAIL)) {
                 return response()->json(['error' => 'Invalid email format'], 422);
             }
-
+            
+            $oldData = $contact->toArray();
             $contact->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'contact',
+                $contact->id,
+                $oldData,
+                $contact,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Contact updated successfully', 
@@ -326,9 +419,25 @@ class ContactController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $contact = Contact::find($id);
             if (!$contact) {
                 return response()->json([
@@ -337,7 +446,19 @@ class ContactController extends Controller
                 ], 404);
             }
 
+            $oldData = $contact->toArray();
             $contact->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'contact',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Contact deleted successfully'

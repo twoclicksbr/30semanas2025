@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\PersonUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -100,6 +101,28 @@ class PersonUserController extends Controller
 
             $users = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'person_user',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'users' => $users,
                 'applied_filters' => $appliedFilters,
@@ -136,19 +159,48 @@ class PersonUserController extends Controller
     /**
      * Exibir um registro específico.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $personUser = PersonUser::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $personUser = PersonUser::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$personUser) {
-                return response()->json(['error' => 'Not Found', 'details' => 'PersonUser not found'], 404);
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'PersonUser not found'
+                ], 404);
             }
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'person_user',
+                $personUser->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['person_user' => $personUser], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -158,9 +210,15 @@ class PersonUserController extends Controller
     public function store(Request $request)
     {
         try {
-            // Capturar o id_credential da sessão (setado pelo middleware)
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -184,6 +242,17 @@ class PersonUserController extends Controller
             $validatedData['id_credential'] = $idCredential;
 
             $personUser = PersonUser::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'personUser',
+                $personUser->id,
+                null,
+                $personUser,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'PersonUser created successfully. Please use the verification endpoint to confirm your email.',
@@ -210,6 +279,22 @@ class PersonUserController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $personUser = PersonUser::find($id);
 
             if (!$personUser) {
@@ -228,7 +313,19 @@ class PersonUserController extends Controller
                 $validatedData['password'] = bcrypt($validatedData['password']);
             }
 
+            $oldData = $personUser->toArray();
             $personUser->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'person_user',
+                $personUser->id,
+                $oldData,
+                $personUser,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'PersonUser updated successfully',
@@ -245,16 +342,44 @@ class PersonUserController extends Controller
     /**
      * Excluir um registro específico.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $personUser = PersonUser::find($id);
 
             if (!$personUser) {
                 return response()->json(['error' => 'Not Found', 'details' => 'PersonUser not found'], 404);
             }
 
+            $oldData = $personUser->toArray();
             $personUser->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'person_user',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'PersonUser deleted successfully'

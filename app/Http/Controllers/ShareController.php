@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Share;
 use Illuminate\Http\Request;
 
@@ -102,6 +103,28 @@ class ShareController extends Controller
 
             $shares = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'share',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'shares' => $shares,
                 'applied_filters' => $appliedFilters,
@@ -137,10 +160,22 @@ class ShareController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $share = Share::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $share = Share::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$share) {
                 return response()->json([
@@ -148,6 +183,17 @@ class ShareController extends Controller
                     'details' => 'Share not found'
                 ], 404);
             }
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'share',
+                $share->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['share' => $share], 200);
 
@@ -162,9 +208,15 @@ class ShareController extends Controller
     public function store(Request $request)
     {
         try {
-            // Capturar o id_credential da sessão (setado pelo middleware)
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -186,6 +238,17 @@ class ShareController extends Controller
             $validatedData['id_credential'] = $idCredential;
 
             $share = Share::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'share',
+                $share->id,
+                null,
+                $share,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Share created successfully',
@@ -210,6 +273,22 @@ class ShareController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $share = Share::find($id);
 
             if (!$share) {
@@ -229,7 +308,19 @@ class ShareController extends Controller
                 'active' => 'sometimes|integer|in:0,1',
             ]);
 
+            $oldData = $share->toArray();
             $share->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'share',
+                $share->id,
+                $oldData,
+                $share,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Share updated successfully',
@@ -251,9 +342,25 @@ class ShareController extends Controller
     }
 
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $share = Share::find($id);
 
             if (!$share) {
@@ -263,7 +370,19 @@ class ShareController extends Controller
                 ], 404);
             }
 
+            $oldData = $share->toArray();
             $share->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'share',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Share deleted successfully'

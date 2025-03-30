@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Gender;
 use Illuminate\Http\Request;
 
@@ -84,6 +85,28 @@ class GenderController extends Controller
 
             $genders = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'gender',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'genders' => $genders,
                 'applied_filters' => $appliedFilters,
@@ -124,9 +147,15 @@ class GenderController extends Controller
     public function store(Request $request)
     {
         try {
-            // Capturar o id_credential da sessão (setado pelo middleware)
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -143,6 +172,17 @@ class GenderController extends Controller
             $validatedData['id_credential'] = $idCredential;
 
             $gender = Gender::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'gender',
+                $gender->id,
+                null,
+                $gender,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Gender created successfully',
@@ -167,19 +207,48 @@ class GenderController extends Controller
     /**
      * Exibir um registro específico.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $gender = Gender::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $gender = Gender::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$gender) {
-                return response()->json(['error' => 'Not Found', 'details' => 'Gender not found'], 404);
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'Gender not found'
+                ], 404);
             }
+
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'gender',
+                $gender->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['gender' => $gender], 200);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -189,6 +258,22 @@ class GenderController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $gender = Gender::find($id);
 
             if (!$gender) {
@@ -200,7 +285,19 @@ class GenderController extends Controller
                 'active' => 'sometimes|integer|in:0,1',
             ]);
 
+            $oldData = $gender->toArray();
             $gender->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'gender',
+                $gender->id,
+                $oldData,
+                $gender,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Gender updated successfully',
@@ -217,16 +314,44 @@ class GenderController extends Controller
     /**
      * Excluir um registro específico.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $gender = Gender::find($id);
 
             if (!$gender) {
                 return response()->json(['error' => 'Not Found', 'details' => 'Gender not found'], 404);
             }
 
+            $oldData = $gender->toArray();
             $gender->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'gender',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['message' => 'Gender deleted successfully'], 200);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\Celebration;
 use Illuminate\Http\Request;
 
@@ -87,6 +88,28 @@ class CelebrationController extends Controller
 
             $celebrations = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'celebration',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'celebrations' => $celebrations,
                 'applied_filters' => $appliedFilters,
@@ -122,10 +145,22 @@ class CelebrationController extends Controller
     }
 
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $celebration = Celebration::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $celebration = Celebration::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
 
             if (!$celebration) {
                 return response()->json([
@@ -134,9 +169,18 @@ class CelebrationController extends Controller
                 ], 404);
             }
 
-            return response()->json([
-                'celebration' => $celebration
-            ], 200);
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'celebration',
+                $celebration->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['celebration' => $celebration], 200);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -150,10 +194,18 @@ class CelebrationController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
             if (!$idCredential) {
                 return response()->json([
-                    'error' => 'Unauthorized', 
+                    'error' => 'Unauthorized',
                     'details' => 'Invalid session. Please authenticate again.'
                 ], 401);
             }
@@ -168,6 +220,17 @@ class CelebrationController extends Controller
             $validatedData['id_credential'] = $idCredential;
 
             $celebration = Celebration::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'celebration',
+                $celebration->id,
+                null,
+                $celebration,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Celebration created successfully', 
@@ -193,6 +256,22 @@ class CelebrationController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $celebration = Celebration::find($id);
             if (!$celebration) {
                 return response()->json([
@@ -208,7 +287,19 @@ class CelebrationController extends Controller
                 'active' => 'sometimes|integer|in:0,1'
             ]);
 
+            $oldData = $celebration->toArray();
             $celebration->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'celebration',
+                $celebration->id,
+                $oldData,
+                $celebration,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Celebration updated successfully', 
@@ -230,9 +321,25 @@ class CelebrationController extends Controller
     }
 
     
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $celebration = Celebration::find($id);
             if (!$celebration) {
                 return response()->json([
@@ -241,7 +348,19 @@ class CelebrationController extends Controller
                 ], 404);
             }
 
+            $oldData = $celebration->toArray();
             $celebration->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'celebration',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'Celebration deleted successfully'

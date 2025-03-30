@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\TypeContact;
 use Illuminate\Http\Request;
 
@@ -81,6 +82,28 @@ class TypeContactController extends Controller
 
             $typeContacts = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'type_contact',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'typeContacts' => $typeContacts, 
                 'applied_filters' => $appliedFilters,
@@ -116,24 +139,46 @@ class TypeContactController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $typeContact = TypeContact::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $typeContact = TypeContact::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
             if (!$typeContact) {
                 return response()->json([
-                    'error' => 'Not Found', 
+                    'error' => 'Not Found',
                     'details' => 'TypeContact not found'
                 ], 404);
             }
 
-            return response()->json([
-                'typeContact' => $typeContact
-            ], 200);
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'type_contact',
+                $typeContact->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['type_contact' => $typeContact], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Internal Server Error', 
+                'error' => 'Internal Server Error',
                 'details' => $e->getMessage()
             ], 500);
         }
@@ -142,9 +187,20 @@ class TypeContactController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
             if (!$idCredential) {
-                return response()->json(['error' => 'Unauthorized', 'details' => 'Invalid session. Please authenticate again.'], 401);
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
             }
 
             $validatedData = $request->validate([
@@ -160,19 +216,58 @@ class TypeContactController extends Controller
             }
 
             $validatedData['id_credential'] = $idCredential;
+
             $typeContact = TypeContact::create($validatedData);
 
-            return response()->json(['message' => 'TypeContact created successfully', 'typeContact' => $typeContact], 201);
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'typeContact',
+                $typeContact->id,
+                null,
+                $typeContact,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json([
+                'message' => 'TypeContact created successfully', 
+                'typeContact' => $typeContact
+            ], 201);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Validation error', 'fields' => $e->errors()], 422);
+            return response()->json([
+                'error' => 'Validation error', 
+                'fields' => $e->errors()
+            ], 422);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error', 'details' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'Internal Server Error', 
+                'details' => $e->getMessage()
+            ], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $typeContact = TypeContact::find($id);
             if (!$typeContact) {
                 return response()->json(['error' => 'Not Found', 'details' => 'TypeContact not found'], 404);
@@ -190,7 +285,19 @@ class TypeContactController extends Controller
                 $validatedData['mask'] = array_map('trim', explode(',', $validatedData['mask']));
             }
 
+            $oldData = $typeContact->toArray();
             $typeContact->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'type_contact',
+                $typeContact->id,
+                $oldData,
+                $typeContact,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json(['message' => 'TypeContact updated successfully', 'typeContact' => $typeContact], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -200,9 +307,25 @@ class TypeContactController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
             $typeContact = TypeContact::find($id);
             if (!$typeContact) {
                 return response()->json([
@@ -211,7 +334,19 @@ class TypeContactController extends Controller
                 ], 404);
             }
 
+            $oldData = $typeContact->toArray();
             $typeContact->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'type_contact',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'TypeContact deleted successfully'

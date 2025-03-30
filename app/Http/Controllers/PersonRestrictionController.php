@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\LogHelper;
 use App\Models\PersonRestriction;
 use Illuminate\Http\Request;
 
@@ -88,6 +89,28 @@ class PersonRestrictionController extends Controller
 
             $restrictions = $query->paginate($perPage);
 
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredentialLog = session('id_credential');
+
+            if ($idPerson && $idCredentialLog) {
+                LogHelper::store(
+                    'viewed',
+                    'person_restriction',
+                    null,
+                    $appliedFilters,
+                    null,
+                    $idPerson,
+                    $idCredentialLog
+                );
+            }
+
             return response()->json([
                 'restrictions' => $restrictions,
                 'applied_filters' => $appliedFilters,
@@ -121,21 +144,42 @@ class PersonRestrictionController extends Controller
         }
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         try {
-            $restriction = PersonRestriction::find($id);
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
 
-            if (!$restriction) {
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            $personRestiction = PersonRestriction::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
+            if (!$personRestiction) {
                 return response()->json([
                     'error' => 'Not Found',
                     'details' => 'PersonRestriction not found'
                 ], 404);
             }
 
-            return response()->json([
-                'person_restriction' => $restriction
-            ], 200);
+            // Log da ação
+            LogHelper::store(
+                'show',
+                'person_restriction',
+                $personRestiction->id,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json(['person_restriction' => $personRestiction], 200);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -148,8 +192,15 @@ class PersonRestrictionController extends Controller
     public function store(Request $request)
     {
         try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+            
             $idCredential = session('id_credential');
-
             if (!$idCredential) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -165,11 +216,22 @@ class PersonRestrictionController extends Controller
 
             $validatedData['id_credential'] = $idCredential;
 
-            $restriction = PersonRestriction::create($validatedData);
+            $personRestriction = PersonRestriction::create($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'created',
+                'person_restriction',
+                $personRestriction->id,
+                null,
+                $personRestriction,
+                $idPerson,
+                $idCredential
+            );
 
             return response()->json([
                 'message' => 'PersonRestriction created successfully',
-                'person_restriction' => $restriction,
+                'person_restriction' => $personRestriction,
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -187,6 +249,129 @@ class PersonRestrictionController extends Controller
     }
 
 
+    public function update(Request $request, $id)
+    {
+        try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
+            $personRestriction = PersonRestriction::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
+            if (!$personRestriction) {
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'PersonRestriction not found'
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'id_person' => 'required|exists:person,id',
+                'id_type_user' => 'required|exists:type_user,id',
+                'active' => 'sometimes|integer|in:0,1',
+            ]);
+
+            $oldData = $personRestriction->toArray();
+            $personRestriction->update($validatedData);
+
+            // Log da ação
+            LogHelper::store(
+                'updated',
+                'person_restriction',
+                $personRestriction->id,
+                $oldData,
+                $personRestriction,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json([
+                'message' => 'PersonRestriction updated successfully',
+                'person_restriction' => $personRestriction,
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation error',
+                'fields' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $idPerson = $request->header('id_person');
+            if (!$idPerson) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person in headers'
+                ], 401);
+            }
+
+            $idCredential = session('id_credential');
+            if (!$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Invalid session. Please authenticate again.'
+                ], 401);
+            }
+
+            $personRestriction = PersonRestriction::where('id', $id)
+                ->where('id_credential', $idCredential)
+                ->first();
+
+            if (!$personRestriction) {
+                return response()->json([
+                    'error' => 'Not Found',
+                    'details' => 'PersonRestriction not found'
+                ], 404);
+            }
+
+            $oldData = $personRestriction->toArray();
+            $personRestriction->delete();
+
+            // Log da ação
+            LogHelper::store(
+                'deleted',
+                'person_restriction',
+                $id,
+                $oldData,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            return response()->json([
+                'message' => 'PersonRestriction deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
