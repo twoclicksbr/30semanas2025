@@ -23,14 +23,10 @@ class SiteLoginController extends Controller
         ]);
 
         $url = config('api.base_url');
-
         $username = Config::get('api.username');
         $token = Config::get('api.token');
         $endpoint = "$url/api/v1/person_user/login";
 
-        // dd($endpoint);
-
-        // Faz a requisição à API
         $response = Http::withHeaders([
             'username' => $username,
             'token' => $token,
@@ -38,98 +34,100 @@ class SiteLoginController extends Controller
             'email' => $request->email,
             'password' => $request->password,
         ]);
-        
-        // Verifica se a requisição falhou
+
         if ($response->failed()) {
-            return back()->with('error', 'E-mail de aceso ou Senha Inválido.');
-            // return back()->with('error', 'E-mail de aceso ou Senha Inválido.' . $response->body());
+            return back()->with('error', 'E-mail de acesso ou Senha inválido.');
         }
-        
+
         $data = $response->json();
 
-        // Verifica se a API retornou o campo id_person
-        if (isset($data['id_person'])) {
+        if (!isset($data['id_person'], $data['id_credential'])) {
+            return back()->with('error', 'Erro na API: resposta incompleta.');
+        }
 
-            $id_person = $data['id_person'];
+        $id_person = $data['id_person'];
+        $id_credential = $data['id_credential'];
 
-            // Busca o nome do usuário na API
-            $personResponse = Http::withHeaders([
-                'username' => $username,
-                'token' => $token,
-            ])->get("$url/api/v1/person/{$id_person}");
+        // Armazenar na sessão
+        Session::put('auth_id_person', $id_person);
+        Session::put('auth_id_credential', $id_credential);
+        Session::put('id_credential', $id_credential); // necessário para a API
 
-            if ($personResponse->successful()) {
-                $personData = $personResponse->json();
-                $fullName = $personData['person']['name'] ?? '';
+        // Buscar nome do usuário
+        $personResponse = Http::withHeaders([
+            'username' => $username,
+            'token' => $token,
+            'id-person' => $id_person,
+            'id-credential' => $id_credential,
+        ])->get("$url/api/v1/person/{$id_person}");
 
-                // Salva na sessão
-                Session::put('auth_id_person', $id_person);
-                Session::put('auth_name', $fullName);
-            }
+        // dd($personResponse);
 
-            // Buscar restrições do usuário
-            $restrictionsResponse = Http::withHeaders([
-                'username' => $username,
-                'token' => $token,
-            ])->get("$url/api/v1/person_restriction", [
-                'id_person' => $id_person
-            ]);            
+        if ($personResponse->successful()) {
+            $personData = $personResponse->json();
 
-            // dd($restrictionsResponse);
+            // dd($personData);
 
-            if ($restrictionsResponse->successful()) {
-                $restrictionsData = $restrictionsResponse->json();
+            $fullName = $personData['person']['name'] ?? '';
+            Session::put('auth_name', $fullName);
+        }
 
-                // dd($restrictionsData);
-                
-                $restrictions = $restrictionsData['restrictions']['data'] ?? []; // Pegamos os registros corretos
+        // Buscar restrições do usuário
+        $restrictionsResponse = Http::withHeaders([
+            'username' => $username,
+            'token' => $token,
+            'id-person' => $id_person,
+            'id-credential' => $id_credential,
+        ])->get("$url/api/v1/person_restriction", [
+            'id_person' => $id_person
+        ]);
 
-                // dd($restrictions);
-            
-                foreach ($restrictions as $restriction) {
-                    $idTypeUser = $restriction['id_type_user'];
+        // dd($restrictionsResponse);
 
-                    // dd($idTypeUser);
-            
-                    // Buscar o nome do tipo de pessoa
-                    $typePersonResponse = Http::withHeaders([
-                        'username' => $username,
-                        'token' => $token,
-                    ])->get("$url/api/v1/type_user/{$idTypeUser}");
+        if ($restrictionsResponse->successful()) {
+            $restrictionsData = $restrictionsResponse->json();
+            $restrictions = $restrictionsData['restrictions']['data'] ?? [];
 
-                    // dd($typePersonResponse);
-            
-                    if ($typePersonResponse->successful()) {
-                        $typePersonData = $typePersonResponse->json();
+            foreach ($restrictions as $restriction) {
+                $idTypeUser = $restriction['id_type_user'];
 
-                        // dd($typePersonData);
-            
-                        // Agora acessamos 'result.name' corretamente
-                        if (isset($typePersonData['type_user']['name'])) {
-                            $sessionName = 'auth_' . strtolower(str_replace(
-                                [' ', 'á', 'é', 'í', 'ó', 'ú', 'ã', 'õ', 'ç'], 
-                                ['_', 'a', 'e', 'i', 'o', 'u', 'a', 'o', 'c'], 
-                                $typePersonData['type_user']['name']));
-            
-                            // Criar sessão dinâmica com "auth_" antes do nome
-                            Session::put($sessionName, true);
+                // dd([
+                //     'username' => $username,
+                //     'token' => $token,
+                //     'id_person' => $id_person,
+                //     'id_credential' => $id_credential,
+                // ]);
 
-                            // dd($sessionName);
+                $typeResponse = Http::withHeaders([
+                    'username' => $username,
+                    'token' => $token,
+                    'id-person' => $id_person,
+                    'id-credential' => $id_credential,
+                ])->get("$url/api/v1/type_user/{$idTypeUser}");
 
-                        } else {
-                            dd('Erro: A API type_person não retornou um nome válido.', $typePersonData);
-                        }
-                    } else {
-                        dd('Erro: Falha ao buscar type_person.', $typePersonResponse->body());
+                // dd($typeResponse);
+
+                if ($typeResponse->successful()) {
+                    $typeData = $typeResponse->json();
+                    $typeName = $typeData['type_user']['name'] ?? null;
+
+                    if ($typeName) {
+                        $sessionName = 'auth_' . strtolower(str_replace(
+                            [' ', 'á', 'é', 'í', 'ó', 'ú', 'ã', 'õ', 'ç'],
+                            ['_', 'a', 'e', 'i', 'o', 'u', 'a', 'o', 'c'],
+                            $typeName
+                        ));
+
+                        Session::put($sessionName, true);
                     }
                 }
             }
-            
-            return redirect()->route('home')->with('success', 'Login realizado com sucesso!');
-
-        } else {
-            return back()->with('error', 'Erro na API: Resposta inesperada: ' . json_encode($data));
         }
+
+        // dd(session()->all());
+
+        return redirect()->route('home')->with('success', 'Login realizado com sucesso!');
     }
+
     
 }

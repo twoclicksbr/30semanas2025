@@ -48,7 +48,7 @@ class VerifyHeaders
         $response = $next($request);
 
         // Limpa o ID da sessão após a resposta ser enviada
-        Session::forget('id_credential');
+        // Session::forget('id_credential');
 
         return $response;
     }

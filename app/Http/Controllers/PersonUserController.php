@@ -438,6 +438,7 @@ class PersonUserController extends Controller
 
             return response()->json([
                 'id_person' => $user->id_person,
+                'id_credential' => $user->id_credential
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -454,6 +455,42 @@ class PersonUserController extends Controller
     }
 
 
+    public function logout(Request $request)
+    {
+        try {
+            $idPerson = $request->header('id_person');
+            $idCredential = session('id_credential');
+
+            if (!$idPerson || !$idCredential) {
+                return response()->json([
+                    'error' => 'Unauthorized',
+                    'details' => 'Missing id_person or invalid session'
+                ], 401);
+            }
+
+            // Log da ação de logout
+            LogHelper::store(
+                'logout_success',
+                'person_user',
+                null,
+                null,
+                null,
+                $idPerson,
+                $idCredential
+            );
+
+            // Aqui você pode limpar a sessão se for necessário
+            session()->flush();
+
+            return response()->json(['message' => 'Logout successful'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 
 

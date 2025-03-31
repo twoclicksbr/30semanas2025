@@ -204,7 +204,7 @@ class TypeUserController extends Controller
     {
         try {
             $idPerson = $request->header('id_person');
-            $idCredential = session('id_credential');
+            $idCredential = $request->header('id-credential') ?? session('id_credential');
 
             if (!$idPerson || !$idCredential) {
                 return response()->json([
