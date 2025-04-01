@@ -9,6 +9,7 @@ use App\Http\Controllers\CredentialController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GenderController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\ParticipantController;
 use App\Http\Controllers\PersonController;
 use App\Http\Controllers\PersonRestrictionController;
 use App\Http\Controllers\PersonUserController;
@@ -24,6 +25,8 @@ use App\Http\Middleware\VerifyHeaders;
 Route::prefix('v1')->group(function () {
     
     Route::middleware([VerifyHeaders::class])->group(function () {
+
+        Route::post('/participant', [ParticipantController::class, 'store']);
 
         // ✅ Rotas de Credential (SEM restrição de ID)
         Route::get('credential', [CredentialController::class, 'index']);  // Listar todas

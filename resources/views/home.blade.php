@@ -32,20 +32,13 @@
                         <h1 class="display-2 fs-50 text-white mb-7" data-cue="zoomIn" data-interval="-200"
                             data-group="page-title" data-delay="200" data-show="true"
                             style="animation-name: zoomIn; animation-duration: 700ms; animation-timing-function: ease; animation-delay: 700ms; animation-direction: normal; animation-fill-mode: both;">
-                            <mark style="background-color: #8b5a3c80;">24 de Abril - Quinta-Feira.</mark>
+                            <mark style="background-color: #8b5a3c80;">25 de Abriu - Sexta-Feira.</mark>
                         </h1>
                         <h2 class="h6 text-uppercase ls-xl text-white mb-5" data-cue="zoomIn" data-interval="-200"
                             data-group="page-title" data-delay="200" data-show="true"
                             style="animation-name: zoomIn; animation-duration: 700ms; animation-timing-function: ease; animation-delay: 1200ms; animation-direction: normal; animation-fill-mode: both;">
                             O 30 Semanas é uma ferramenta, mas vale lembrar que ele não tem o poder de mudar a vida de
                             ninguém. Quem tem o poder para mudar, restaurar, transformar e curar é Jesus!
-
-                            <br><br>
-
-                            @php
-                                var_dump(session()->all());
-                            @endphp
-
                         </h2>
                         <!-- <a href="./assets/media/movie.mp4" class="btn btn-circle btn-white btn-play ripple mx-auto" data-glightbox><i class="icn-caret-right"></i></a> -->
                     </div>
@@ -233,9 +226,9 @@
                     <h3 class="text-white">IMPORTANTE: NA HORA DA PARTILHA, USAR FONE DE OUVIDO E DEIXAR A CÂMERA ABERTA.
                     </h3>
 
-                    <a href="/login" class="btn btn-soft-primary w-100 mt-2 mb-0">
+                    {{-- <a href="/login" class="btn btn-soft-primary w-100 mt-2 mb-0">
                         <i class="uil uil-signin"></i> Entrar e Partilhar
-                    </a>
+                    </a> --}}
                 </div>
             </div>
         </div>
@@ -253,7 +246,7 @@
                             data-plyr-embed-id="{{ $featuredVideo['link_youtube'] }}">
                         </div>
                     @else
-                        <p class="text-white">Nenhum vídeo disponível no momento.</p>
+                        <p class="text-muted text-center">Nenhum vídeo disponível no momento.</p>
                     @endif
 
                 </div>

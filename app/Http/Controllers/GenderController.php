@@ -14,8 +14,19 @@ class GenderController extends Controller
     public function index(Request $request)
     {
         try {
+
+            $idCredential = session('id_credential');
+
+            $query = Gender::query();
+
+            // Se for filial, só mostra os registros da matriz (id_credential = 1)
+            if ($idCredential != 1) {
+                $query->where('id_credential', 1);
+            } else {
+                $query->where('id_credential', $idCredential);
+            }
+
             $ids = $request->query('id', null);
-            $idCredential = $request->query('id_credential', null);
             $name = $request->query('name', null);
             $active = $request->query('active', null);
 
@@ -28,8 +39,7 @@ class GenderController extends Controller
             $updatedStart = $request->query('updated_at_start', null);
             $updatedEnd = $request->query('updated_at_end', null);
 
-            // Criar a query base
-            $query = Gender::orderBy($sortBy, $sortOrder);
+            $query->orderBy($sortBy, $sortOrder);
 
             $appliedFilters = [
                 'sort_by' => $sortBy,
@@ -44,10 +54,11 @@ class GenderController extends Controller
                 $appliedFilters['id'] = $idArray;
             }
 
-            if (!is_null($idCredential)) {
-                $query->where('id_credential', $idCredential);
-                $appliedFilters['id_credential'] = $idCredential;
-            }
+            // $idCredential = session('id_credential');
+            // if (!is_null($idCredential)) {
+            //     $query->where('id_credential', $idCredential);
+            //     $appliedFilters['id_credential'] = $idCredential;
+            // }
 
             if (!is_null($name)) {
                 $query->where('name', 'LIKE', "%{$name}%");
@@ -85,7 +96,8 @@ class GenderController extends Controller
 
             $genders = $query->paginate($perPage);
 
-            $idPerson = $request->header('id_person');
+            // $idPerson = $request->header('id_person');
+            $idPerson = (int) $request->header('id-person');
             if (!$idPerson) {
                 return response()->json([
                     'error' => 'Unauthorized',
@@ -93,9 +105,7 @@ class GenderController extends Controller
                 ], 401);
             }
 
-            $idCredentialLog = session('id_credential');
-
-            if ($idPerson && $idCredentialLog) {
+            if ($idPerson && $idCredential) {
                 LogHelper::store(
                     'viewed',
                     'gender',
@@ -103,7 +113,7 @@ class GenderController extends Controller
                     $appliedFilters,
                     null,
                     $idPerson,
-                    $idCredentialLog
+                    $idCredential
                 );
             }
 
@@ -115,7 +125,6 @@ class GenderController extends Controller
                         'id' => 'Filter by multiple IDs using comma-separated values',
                         'name' => 'Filter by gender name using LIKE',
                         'active' => 'Filter by status (0 = inactive, 1 = active)',
-                        
                         'created_at_start' => 'Filter records created from this date (Y-m-d H:i:s)',
                         'created_at_end' => 'Filter records created until this date (Y-m-d H:i:s)',
                         'updated_at_start' => 'Filter records updated from this date (Y-m-d H:i:s)',
@@ -134,11 +143,12 @@ class GenderController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Internal Server Error', 
+                'error' => 'Internal Server Error',
                 'details' => $e->getMessage()
             ], 500);
         }
     }
+
 
 
     /**

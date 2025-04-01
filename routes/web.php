@@ -18,6 +18,7 @@ Route::post('/login', [SiteLoginController::class, 'login'])->name('login.proces
 Route::get('/logout', function () { Session::flush(); return redirect()->route('login'); })->name('logout');
 
 
+Route::get('/cadastro', function () { return view('register'); })->name('register');
 
 
 Route::get('/rec_password', [PasswordResetController::class, 'showEmailForm'])->name('password.request');

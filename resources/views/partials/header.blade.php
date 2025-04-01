@@ -68,7 +68,7 @@
 
                         @if (!session()->has('auth_id_person'))
                             <li class="nav-item dropdown">
-                                <a class="nav-link " href="/register">Cadastre-se</a>
+                                <a class="nav-link " href="/cadastro">Cadastre-se</a>
                             </li>
                         @else
                             <li class="nav-item dropdown">
@@ -169,12 +169,12 @@
                                 <span class="mobile-text">Partilhar</span>
                             </a>
                         @else
-                            <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
+                            {{-- <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
                                 style="background-color: #f78b77; border-color: #f78b77;">
                                 <i class="uil uil-signin"></i>
                                 <span class="desktop-text">Entrar e Partilhar?</span>
                                 <span class="mobile-text">Entrar</span>
-                            </a>
+                            </a> --}}
                         @endif
 
                     </li>

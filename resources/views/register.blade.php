@@ -1,35 +1,14 @@
-@if (session()->has('auth_id_person'))
-    @php
-        header('Location: ' . route('home'));
-        exit();
-    @endphp
-@endif
-
 @extends('layouts.app')
 
-@section('title', 'Página Inicial')
-
-<style>
-    .step {
-        display: none;
-    }
-
-    .active {
-        display: block;
-    }
-</style>
+@section('title', 'Inscreva-se')
 
 @section('content')
-
     <section class="wrapper image-wrapper bg-image bg-overlay bg-overlay-light-100 text-white"
-        data-image-src="https://30semanas.com.br//assets/img/photos/bg26.jpg"
+        data-image-src="https://30semanas.com.br/assets/img/photos/bg26.jpg"
         style="background-image: url('https://30semanas.com.br/assets/img/photos/bg26.jpg');">
         <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
             <div class="row">
-                <div class="col-lg-8 mx-auto">
-                    {{-- <h1 class="display-1 mb-3 text-white"> Alex </h1> --}}
-
-                </div>
+                <div class="col-lg-8 mx-auto"></div>
             </div>
         </div>
     </section>
@@ -37,449 +16,303 @@
     <section class="wrapper mb-10">
         <div class="container pb-14 pb-md-16">
             <div class="row">
-                <div class="col-lg-7 col-xl-6 col-xxl-7 mx-auto mt-n20">
+                <div class="col-lg-7 col-xl-6 col-xxl-10 mx-auto mt-n20">
                     <div class="card">
-                        <div class="card-body p-11 ">
-
-
+                        <div class="card-body p-11">
                             <h2 class="mb-3 text-start">Inscreva-se</h2>
-                            {{-- <p class="lead mb-6 text-start">Preencha seus Dados.</p> --}}
 
+                            <div id="formErrors" class="alert alert-danger d-none"></div>
 
-
-
-                            {{-- <form class="text-start mb-3" method="POST" >
-                                <div class="form-floating mb-4">
-                                    <input type="email" class="form-control" placeholder="Email" id="email"
-                                        name="email">
-                                    <label for="email">Email: <span class="text-orange"><i
-                                                class="uil uil-asterisk"></i></span></label>
-                                </div>
-                                <div class="form-floating password-field mb-4">
-                                    <input type="password" class="form-control" placeholder="Password" id="senha"
-                                        name="senha">
-                                    <span class="password-toggle"><i class="uil uil-eye"></i></span>
-                                    <label for="senha">Senha: <span class="text-orange"><i
-                                                class="uil uil-asterisk"></i></span></label>
-                                </div>
-
-                                <input type="hidden" name="crud" value="login">
-                                <button type="submit"
-                                    class="btn btn-orange btn-icon btn-icon-start rounded btn-login w-100 mb-2"><i
-                                        class="uil uil-signin"></i> Entrar e Partilhar</button>
-                                <!-- <a class="btn btn-orange rounded-pill btn-login w-100 mb-2">Entrar</a> -->
-                            </form> --}}
-
-                            @if (session('success'))
-                                <div class="alert alert-success">{{ session('success') }}</div>
-                            @endif
-
-                            @if (session('error'))
-                                <div class="alert alert-danger">{{ session('error') }}</div>
-                            @endif
-
-
-                            <form id="multiStepForm" method="POST" action="{{ route('register.step1') }}">
+                            <form id="multiStepForm">
                                 @csrf
 
-                                <!-- Etapa 1 - Dados pessoais -->
+                                <!-- Etapa 1 -->
                                 <div class="step active" id="step1">
-
                                     <p class="lead mb-6 text-start">1. Dados Pessoais</p>
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-8">
-                                            <input class="form-control" id="name" name="name" placeholder="Nome"
-                                                required>
+                                        <div class="col-lg-8">
+                                            <input class="form-control" id="name" placeholder="Nome" required>
                                         </div>
-                                        <div class="col-md-12 col-lg-4">
-                                            <select class="form-select" id="id_gender" name="id_gender" required>
-                                                <option value="">Gênero</option>
-                                                <option value="1">Masculino</option>
-                                                <option value="2">Feminino</option>
+                                        <div class="col-lg-4">
+                                            <select class="form-select" id="id_gender" required>
+                                                <option value="">Carregando...</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
-
-                                        <div class="col-md-12 col-lg-6 position-relative">
-                                            <input class="form-control" type="text" id="cpf" name="cpf"
-                                                placeholder="CPF" required>
-                                            <span id="cpf_spinner"
-                                                class="spinner-border spinner-border-sm text-primary position-absolute"
-                                                style="right: 10px; top: 50%; transform: translateY(-50%); display: none;"></span>
-                                            <span id="cpf_error" style="color: red; display: none;">Este CPF já está
-                                                cadastrado.</span>
+                                        <div class="col-lg-6">
+                                            <input class="form-control" type="text" id="cpf" placeholder="CPF"
+                                                required>
                                         </div>
-
-
-                                        <div class="col-md-12 col-lg-6">
-                                            <input class="form-control" type="date" id="dt_nascimento"
-                                                name="dt_nascimento" required>
+                                        <div class="col-lg-6">
+                                            <input class="form-control" type="date" id="dt_nascimento" required>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
-
-                                        <div class="col-md-12 col-lg-6">
-                                            <input class="form-control" type="text" id="whatsapp" name="whatsapp"
-                                                placeholder="WhatsApp" required>
+                                        <div class="col-lg-6">
+                                            <input class="form-control" type="text" id="whatsapp"
+                                                placeholder="WhatsApp">
                                         </div>
-
-                                        <div class="col-md-12 col-lg-6 position-relative">
-                                            <input class="form-control" type="text" id="eklesia" name="eklesia"
-                                                placeholder="Eklesia">
-                                            <span id="eklesia_spinner"
-                                                class="spinner-border spinner-border-sm text-primary position-absolute"
-                                                style="right: 10px; top: 50%; transform: translateY(-50%); display: none;"></span>
-                                            <span id="eklesia_error" style="color: red; display: none;">Este Eklesia já está
-                                                cadastrado.</span>
+                                        <div class="col-lg-6">
+                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia">
                                         </div>
-
-
                                     </div>
-
-                                    <button type="button" class="btn btn-orange btn-login w-100 mb-2"
+                                    <button type="button" class="btn btn-orange w-100 mb-2"
                                         onclick="nextStep(1)">Próximo</button>
                                 </div>
 
-                                <!-- Etapa 2 - Usuário -->
+                                <!-- Etapa 2 -->
                                 <div class="step" id="step2">
-
-
                                     <p class="lead mb-6 text-start">2. Criar Usuário</p>
-
                                     <div class="row mb-2">
-
-                                        <div class="col-md-12 col-lg-8 position-relative">
-                                            <input class="form-control" type="email" id="email_user" name="email"
-                                                placeholder="E-mail" required>
-                                            <span id="email_spinner"
-                                                class="spinner-border spinner-border-sm text-primary position-absolute"
-                                                style="right: 10px; top: 50%; transform: translateY(-50%); display: none;"></span>
-                                            <span id="email_error" style="color: red; display: none;">Este e-mail já está
-                                                cadastrado.</span>
+                                        <div class="col-lg-8">
+                                            <input class="form-control" type="email" id="email_user" placeholder="E-mail"
+                                                required>
                                         </div>
-
-
-
-                                        <div class="col-md-12 col-lg-4">
-                                            <input class="form-control" type="password" id="password" name="password"
-                                                placeholder="Senha" required>
-
-                                            <script>
-                                                document.addEventListener("DOMContentLoaded", function() {
-                                                    let passwordInput = document.getElementById("password");
-                                                    let passwordError = document.createElement("span");
-                                                    passwordError.style.color = "red";
-                                                    passwordError.style.display = "none";
-                                                    passwordError.textContent = "A senha deve ter pelo menos 8 caracteres.";
-                                                    passwordInput.parentNode.appendChild(passwordError);
-
-                                                    passwordInput.addEventListener("blur", function() {
-                                                        if (passwordInput.value.length < 8) {
-                                                            passwordError.style.display = "block";
-                                                            passwordInput.classList.add("is-invalid");
-                                                        } else {
-                                                            passwordError.style.display = "none";
-                                                            passwordInput.classList.remove("is-invalid");
-                                                        }
-                                                    });
-                                                });
-                                            </script>
-
+                                        <div class="col-lg-4">
+                                            <input class="form-control" type="password" id="password" placeholder="Senha"
+                                                required>
                                         </div>
                                     </div>
-
-
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-6">
-                                            <button class="btn btn-soft-orange btn-login w-100 mb-2" type="button"
+                                        <div class="col-lg-6">
+                                            <button class="btn btn-soft-orange w-100 mb-2" type="button"
                                                 onclick="prevStep(2)">Voltar</button>
                                         </div>
-                                        <div class="col-md-12 col-lg-6">
-                                            <button class="btn btn-orange btn-login w-100 mb-2" type="button"
+                                        <div class="col-lg-6">
+                                            <button class="btn btn-orange w-100 mb-2" type="button"
                                                 onclick="nextStep(2)">Próximo</button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Etapa 3 - Endereço -->
+                                <!-- Etapa 3 -->
                                 <div class="step" id="step3">
                                     <p class="lead mb-6 text-start">3. Endereço</p>
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-3">
-                                            <input class="form-control" type="text" id="cep" name="cep"
-                                                placeholder="CEP" required>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" type="text" id="cep" placeholder="CEP"
+                                                required>
                                         </div>
-                                        <div class="col-md-12 col-lg-7">
-                                            <input class="form-control" type="text" id="logradouro" name="logradouro"
+                                        <div class="col-lg-7">
+                                            <input class="form-control" type="text" id="logradouro"
                                                 placeholder="Logradouro" required>
                                         </div>
-                                        <div class="col-md-12 col-lg-2">
-                                            <input class="form-control" type="text" id="numero" name="numero"
-                                                placeholder="N°" required>
+                                        <div class="col-lg-2">
+                                            <input class="form-control" type="text" id="numero" placeholder="Nº"
+                                                required>
                                         </div>
                                     </div>
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-4">
+                                        <div class="col-lg-4">
                                             <input class="form-control" type="text" id="complemento"
-                                                name="complemento" placeholder="Complemento">
+                                                placeholder="Complemento">
                                         </div>
-                                        <div class="col-md-12 col-lg-8">
-                                            <input class="form-control" type="text" id="bairro" name="bairro"
+                                        <div class="col-lg-8">
+                                            <input class="form-control" type="text" id="bairro"
                                                 placeholder="Bairro" required>
                                         </div>
                                     </div>
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-9">
-                                            <input class="form-control" type="text" id="localidade" name="localidade"
+                                        <div class="col-lg-9">
+                                            <input class="form-control" type="text" id="localidade"
                                                 placeholder="Cidade" required>
                                         </div>
-                                        <div class="col-md-12 col-lg-3">
-                                            <input class="form-control" type="text" id="uf" name="uf"
-                                                placeholder="UF" required>
+                                        <div class="col-lg-3">
+                                            <input class="form-control" type="text" id="uf" placeholder="UF"
+                                                required>
                                         </div>
                                     </div>
-
                                     <div class="row mb-2">
-                                        <div class="col-md-12 col-lg-6">
-                                            <button class="btn btn-soft-orange btn-login w-100 mb-2" type="button"
+                                        <div class="col-lg-6">
+                                            <button class="btn btn-soft-orange w-100 mb-2" type="button"
                                                 onclick="prevStep(3)">Voltar</button>
                                         </div>
-                                        <div class="col-md-12 col-lg-6">
-                                            <button class="btn btn-orange btn-login w-100 mb-2" type="submit">Finalizar
+                                        <div class="col-lg-6">
+                                            <button class="btn btn-orange w-100 mb-2" type="submit">Finalizar
                                                 Cadastro</button>
                                         </div>
                                     </div>
                                 </div>
                             </form>
 
-                            <script>
-                                let currentStep = 1;
-
-                                function nextStep(step) {
-                                    if (validateStep(step)) {
-                                        $("#step" + step).removeClass("active");
-                                        $("#step" + (step + 1)).addClass("active");
-                                        currentStep++;
-                                    }
-                                }
-
-                                function prevStep(step) {
-                                    $("#step" + step).removeClass("active");
-                                    $("#step" + (step - 1)).addClass("active");
-                                    currentStep--;
-                                }
-
-                                function validateStep(step) {
-                                    let valid = true;
-                                    $("#step" + step + " input, #step" + step + " select").each(function() {
-                                        if ($(this).prop("required") && !$(this).val()) {
-                                            alert("Preencha todos os campos obrigatórios!");
-                                            valid = false;
-                                            return false;
-                                        }
-                                    });
-                                    return valid;
-                                }
-                            </script>
-
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    document.getElementById("cep").addEventListener("blur", function() {
-                                        let cep = this.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-
-                                        if (cep.length === 8) { // Verifica se tem 8 dígitos
-                                            fetch(`https://viacep.com.br/ws/${cep}/json/`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    if (!data.erro) {
-                                                        document.getElementById("logradouro").value = data.logradouro || "";
-                                                        document.getElementById("bairro").value = data.bairro || "";
-                                                        document.getElementById("localidade").value = data.localidade || "";
-                                                        document.getElementById("uf").value = data.uf || "";
-                                                    } else {
-                                                        alert("CEP não encontrado!");
-                                                    }
-                                                })
-                                                .catch(error => console.error("Erro ao buscar CEP:", error));
-                                        } else {
-                                            alert("CEP inválido! Digite um CEP com 8 dígitos.");
-                                        }
-                                    });
-                                });
-                            </script>
-
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    document.getElementById("email_user").addEventListener("blur", function() {
-                                        let email = this.value.trim();
-                                        let emailError = document.getElementById("email_error");
-                                        let emailSpinner = document.getElementById("email_spinner");
-
-                                        if (email !== "") {
-                                            emailSpinner.style.display = "inline-block"; // Mostra o spinner
-
-                                            fetch("/check-email", {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                                                            .getAttribute("content")
-                                                    },
-                                                    body: JSON.stringify({
-                                                        email: email
-                                                    })
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    emailSpinner.style.display = "none"; // Esconde o spinner
-                                                    if (data.status === true && data.result && data.result.data.length > 0) {
-                                                        emailError.style.display = "block";
-                                                        emailError.textContent = "Este e-mail já está cadastrado.";
-                                                        document.getElementById("email_user").classList.add("is-invalid");
-                                                    } else {
-                                                        emailError.style.display = "none";
-                                                        document.getElementById("email_user").classList.remove("is-invalid");
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    emailSpinner.style.display = "none"; // Esconde o spinner
-                                                    console.error("Erro ao verificar e-mail:", error);
-                                                });
-                                        }
-                                    });
-                                });
-                            </script>
-
-
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    document.getElementById("cpf").addEventListener("blur", function() {
-                                        let cpf = this.value.trim().replace(/\D/g, ""); // Remove pontos e traço
-                                        let cpfError = document.getElementById("cpf_error");
-                                        let cpfSpinner = document.getElementById("cpf_spinner");
-
-                                        if (cpf !== "") {
-                                            cpfSpinner.style.display = "inline-block"; // Mostra o spinner
-
-                                            fetch("/check-cpf", {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                                                            .getAttribute("content")
-                                                    },
-                                                    body: JSON.stringify({
-                                                        cpf: cpf
-                                                    })
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    cpfSpinner.style.display = "none"; // Esconde o spinner
-                                                    if (data.status === true && data.result && data.result.data.length > 0) {
-                                                        cpfError.style.display = "block";
-                                                        cpfError.textContent = "Este CPF já está cadastrado.";
-                                                        document.getElementById("cpf").classList.add("is-invalid");
-                                                    } else {
-                                                        cpfError.style.display = "none";
-                                                        document.getElementById("cpf").classList.remove("is-invalid");
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    cpfSpinner.style.display = "none"; // Esconde o spinner
-                                                    console.error("Erro ao verificar CPF:", error);
-                                                });
-                                        }
-                                    });
-                                });
-                            </script>
-
-                            <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    document.getElementById("eklesia").addEventListener("blur", function() {
-                                        let eklesia = this.value.trim(); // Remove espaços extras
-                                        let eklesiaError = document.getElementById("eklesia_error");
-                                        let eklesiaSpinner = document.getElementById("eklesia_spinner");
-
-                                        if (eklesia !== "") {
-                                            eklesiaSpinner.style.display = "inline-block"; // Mostra o spinner
-
-                                            fetch("/check-eklesia", {
-                                                    method: "POST",
-                                                    headers: {
-                                                        "Content-Type": "application/json",
-                                                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                                                            .getAttribute("content")
-                                                    },
-                                                    body: JSON.stringify({
-                                                        eklesia: eklesia
-                                                    })
-                                                })
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    eklesiaSpinner.style.display = "none"; // Esconde o spinner
-                                                    if (data.status === true && data.result && data.result.data.length > 0) {
-                                                        eklesiaError.style.display = "block";
-                                                        eklesiaError.textContent = "Este Eklesia já está cadastrado.";
-                                                        document.getElementById("eklesia").classList.add("is-invalid");
-                                                    } else {
-                                                        eklesiaError.style.display = "none";
-                                                        document.getElementById("eklesia").classList.remove("is-invalid");
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    eklesiaSpinner.style.display = "none"; // Esconde o spinner
-                                                    console.error("Erro ao verificar Eklesia:", error);
-                                                });
-                                        }
-                                    });
-                                });
-                            </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
                             <p class="mb-1 mt-5 text-center">
-                                <a href="/" class="hover text-orange"><i class="uil uil-corner-up-left-alt"></i>
-                                    Voltar para Página Principal</a>
-                            </p>
-
-                            {{-- <hr class="mb-5 mt-5"> --}}
-
-                            <!-- <p class="mb-0 text-center">Não tem uma conta? <a href="https://30semanas.com.br/entrar/novo" class="hover text-orange">Inscrever-se</a></p> -->
-
-                            <!-- <p class="mb-0 text-center">30 semanas na sua Igreja? <a href="https://30semanas.com.br/entrar/novo_igreja" class="hover text-orange">Cadastre sua Igreja</a></p> -->
-
-
-
-                            {{-- <p class="mb-2 text-center">
-                                Pastor / Líder?
-                                <a href="https://30semanas.com.br/entrar/cad_igreja" class="hover text-orange">
-                                    Cadastre sua Igreja
+                                <a href="/" class="hover text-orange">
+                                    <i class="uil uil-corner-up-left-alt"></i> Voltar para Página Principal
                                 </a>
-                            </p> --}}
-
-
-
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
+    <script>
+        let currentStep = 1;
+
+        function nextStep(step) {
+            document.getElementById("step" + step).classList.remove("active");
+            document.getElementById("step" + (step + 1)).classList.add("active");
+            currentStep++;
+        }
+
+        function prevStep(step) {
+            document.getElementById("step" + step).classList.remove("active");
+            document.getElementById("step" + (step - 1)).classList.add("active");
+            currentStep--;
+        }
+
+        document.getElementById("multiStepForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const jsonData = {
+                name: document.getElementById("name").value,
+                cpf: document.getElementById("cpf").value,
+                id_gender: document.getElementById("id_gender").value,
+                birthdate: document.getElementById("dt_nascimento").value,
+                whatsapp: document.getElementById("whatsapp").value,
+                eklesia: document.getElementById("eklesia").value,
+                id_church: 1,
+                email: document.getElementById("email_user").value,
+                password: document.getElementById("password").value,
+                address: {
+                    cep: document.getElementById("cep").value,
+                    logradouro: document.getElementById("logradouro").value,
+                    numero: document.getElementById("numero").value,
+                    complemento: document.getElementById("complemento").value,
+                    bairro: document.getElementById("bairro").value,
+                    localidade: document.getElementById("localidade").value,
+                    uf: document.getElementById("uf").value
+                }
+            };
+
+            fetch("{{ $url }}/participant", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "username": "{{ $username }}",
+                        "token": "{{ $token }}",
+                        "id-person": sessionStorage.getItem("auth_id_person")
+                    },
+                    body: JSON.stringify(jsonData)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        // alert("Erro: " + JSON.stringify(data.messages || data.message));
+
+                        if (data.error && data.messages) {
+                            showErrors(data.messages);
+                        } else if (data.error && data.message) {
+                            showErrors({
+                                geral: [data.message]
+                            });
+                        }
+                    } else {
+                        alert("Cadastro realizado com sucesso!");
+                        document.getElementById("multiStepForm").reset();
+                        window.location.href = "/";
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro:", err);
+                    alert("Erro ao enviar os dados.");
+                });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const cepInput = document.getElementById("cep");
+
+            cepInput.addEventListener("blur", function() {
+                const cep = cepInput.value.replace(/\D/g, '');
+
+                if (cep.length !== 8) {
+                    alert("CEP inválido!");
+                    return;
+                }
+
+                fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.erro) {
+                            alert("CEP não encontrado!");
+                            return;
+                        }
+
+                        document.getElementById("logradouro").value = data.logradouro || '';
+                        document.getElementById("bairro").value = data.bairro || '';
+                        document.getElementById("localidade").value = data.localidade || '';
+                        document.getElementById("uf").value = data.uf || '';
+                    })
+                    .catch(() => {
+                        alert("Erro ao buscar o CEP.");
+                    });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const selectGender = document.getElementById("id_gender");
+
+            fetch("{{ $url }}/gender?sort_by=id&sort_order=asc", {
+                    headers: {
+                        "Accept": "application/json",
+                        "username": "{{ $username }}",
+                        "token": "{{ $token }}",
+                        "id-person": 1
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+
+                    console.log("Gêneros recebidos:", data);
+
+                    selectGender.innerHTML = '<option value="">Selecione o Gênero</option>';
+
+                    if (data && data.genders && data.genders.data) {
+                        data.genders.data.forEach(g => {
+                            selectGender.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+                        });
+                    } else {
+                        selectGender.innerHTML = '<option value="">Nenhum gênero encontrado</option>';
+                    }
+                })
+                .catch(() => {
+                    selectGender.innerHTML = '<option value="">Erro ao carregar gêneros</option>';
+                });
+        });
+    </script>
+
+    <script>
+        function showErrors(errors) {
+            const errorBox = document.getElementById("formErrors");
+            errorBox.classList.remove("d-none");
+
+            const messages = {
+                "The cpf has already been taken.": "CPF já está cadastrado.",
+                "The email has already been taken.": "E-mail já está cadastrado."
+            };
+
+            errorBox.innerHTML = Object.entries(errors)
+                .map(([field, msgs]) => {
+                    const translated = msgs.map(msg => messages[msg] || msg);
+                    return `<div><strong>${field}:</strong> ${translated.join(', ')}</div>`;
+                })
+                .join('');
+        }
+    </script>
+
+    <style>
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+    </style>
 
 @endsection
