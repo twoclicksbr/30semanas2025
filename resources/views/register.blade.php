@@ -41,8 +41,8 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="cpf" placeholder="CPF"
-                                                required>
+                                            <input class="form-control" type="text" id="cpf" name="cpf"
+                                                placeholder="CPF" required>
                                         </div>
                                         <div class="col-lg-6">
                                             <input class="form-control" type="date" id="dt_nascimento" required>
@@ -50,11 +50,10 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="whatsapp"
-                                                placeholder="WhatsApp">
+                                            <input class="form-control" type="text" id="whatsapp" placeholder="WhatsApp" required>
                                         </div>
                                         <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia">
+                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia" required>
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-orange w-100 mb-2"
@@ -66,8 +65,8 @@
                                     <p class="lead mb-6 text-start">2. Criar Usuário</p>
                                     <div class="row mb-2">
                                         <div class="col-lg-8">
-                                            <input class="form-control" type="email" id="email_user" placeholder="E-mail"
-                                                required>
+                                            <input class="form-control" type="email" id="email_user" name="email_user"
+                                                placeholder="E-mail" required>
                                         </div>
                                         <div class="col-lg-4">
                                             <input class="form-control" type="password" id="password" placeholder="Senha"
@@ -151,11 +150,39 @@
     <script>
         let currentStep = 1;
 
+        // function nextStep(step) {
+        //     document.getElementById("step" + step).classList.remove("active");
+        //     document.getElementById("step" + (step + 1)).classList.add("active");
+        //     currentStep++;
+        // }
+
         function nextStep(step) {
-            document.getElementById("step" + step).classList.remove("active");
+            const currentStepDiv = document.getElementById("step" + step);
+            const requiredFields = currentStepDiv.querySelectorAll("[required]");
+            let valid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add("is-invalid");
+                    valid = false;
+                } else {
+                    field.classList.remove("is-invalid");
+                }
+            });
+
+            if (!valid) {
+                showErrors({
+                    geral: ["Preencha todos os campos obrigatórios antes de continuar."]
+                });
+                return;
+            }
+
+            document.getElementById("formErrors").classList.add("d-none");
+            currentStepDiv.classList.remove("active");
             document.getElementById("step" + (step + 1)).classList.add("active");
             currentStep++;
         }
+
 
         function prevStep(step) {
             document.getElementById("step" + step).classList.remove("active");
@@ -304,6 +331,130 @@
                 .join('');
         }
     </script>
+
+    <script>
+        document.getElementById("cpf").addEventListener("blur", function() {
+            const cpf = this.value.replace(/\D/g, '');
+
+            if (cpf.length < 11) return;
+
+            fetch("/check-cpf", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        cpf
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status && data.result?.data?.length > 0) {
+                        showErrors({
+                            cpf: ["CPF já está cadastrado."]
+                        });
+                        document.getElementById("cpf").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("cpf").classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                })
+                .catch(() => {
+                    console.error("Erro ao verificar CPF");
+                });
+        });
+    </script>
+
+    <script>
+        document.getElementById("email_user").addEventListener("blur", function() {
+            const email = this.value.trim();
+
+            if (email.length < 5) return;
+
+            fetch("/check-email", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        email
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status && data.result?.data?.length > 0) {
+                        showErrors({
+                            email: ["E-mail já está cadastrado."]
+                        });
+                        document.getElementById("email_user").classList.add("is-invalid");
+                    } else {
+                        document.getElementById("email_user").classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                })
+                .catch(() => {
+                    console.error("Erro ao verificar E-mail");
+                });
+        });
+    </script>
+
+    <script>
+        document.getElementById("password").addEventListener("blur", function() {
+            const password = this.value.trim();
+            const passwordField = document.getElementById("password");
+
+            if (password.length < 6) {
+                showErrors({
+                    password: ["A senha deve ter no mínimo 6 caracteres."]
+                });
+                passwordField.classList.add("is-invalid");
+            } else {
+                passwordField.classList.remove("is-invalid");
+                document.getElementById("formErrors").classList.add("d-none");
+            }
+        });
+    </script>
+
+    <script>
+        document.getElementById("eklesia").addEventListener("blur", function() {
+            const eklesia = this.value.trim();
+            const eklesiaField = document.getElementById("eklesia");
+
+            if (!eklesia) return;
+
+            fetch("/check-eklesia", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        eklesia
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.result && data.result.data && data.result.data.length > 0) {
+                        showErrors({
+                            eklesia: ["Este código Eklesia já está cadastrado."]
+                        });
+                        eklesiaField.classList.add("is-invalid");
+                    } else {
+                        eklesiaField.classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                })
+                .catch(() => {
+                    console.error("Erro ao verificar Eklesia");
+                });
+        });
+    </script>
+
 
     <style>
         .step {

@@ -33,3 +33,44 @@ Route::get('/reset_password', [PasswordResetController::class, 'formReset'])->na
 
 
 Route::get('/admin/type_participation', function () { return view('admin.type_participation'); });
+
+
+
+Route::post('/check-cpf', function (Illuminate\Http\Request $request) {
+    $cpf = preg_replace('/\D/', '', $request->cpf);
+
+    $result = \App\Models\Person::where('cpf', $cpf)->get();
+
+    return response()->json([
+        'status' => true,
+        'result' => [
+            'data' => $result
+        ]
+    ]);
+});
+
+Route::post('/check-email', function (Illuminate\Http\Request $request) {
+    $email = $request->email;
+
+    $result = \App\Models\PersonUser::where('email', $email)->get();
+
+    return response()->json([
+        'status' => true,
+        'result' => [
+            'data' => $result
+        ]
+    ]);
+});
+
+Route::post('/check-eklesia', function (Illuminate\Http\Request $request) {
+    $eklesia = preg_replace('/\D/', '', $request->eklesia);
+
+    $result = \App\Models\Person::where('eklesia', $eklesia)->get();
+
+    return response()->json([
+        'status' => true,
+        'result' => [
+            'data' => $result
+        ]
+    ]);
+});
