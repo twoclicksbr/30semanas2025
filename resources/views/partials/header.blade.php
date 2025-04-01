@@ -68,7 +68,7 @@
 
                         @if (!session()->has('auth_id_person'))
                             <li class="nav-item dropdown">
-                                <a class="nav-link " href="/cadastro">Cadastre-se</a>
+                                <a class="nav-link " href="/cadastro">Ciclo 2025. Cadastre-se</a>
                             </li>
                         @else
                             <li class="nav-item dropdown">
