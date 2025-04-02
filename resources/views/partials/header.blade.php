@@ -104,34 +104,6 @@
                                     aria-expanded="true">Administrar</a>
                                 <ul class="dropdown-menu show" data-bs-popper="static">
 
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" href="#">
-                                            <i class="uil uil-users-alt"></i>
-                                            Participantes / Líderes
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" href="#">
-                                            <i class="uil uil-location-point"></i>
-                                            Igrejas
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" href="#">
-                                            <i class="uil uil-youtube"></i>
-                                            Celebrações
-                                        </a>
-                                    </li>
-
-                                    <li class="nav-item">
-                                        <a class="dropdown-item" href="https://30semanas.com.br/partilha">
-                                            <i class="uil uil-shield-check"></i>
-                                            Salas de Partilhas
-                                        </a>
-                                    </li>
-
                                     @if (session('auth_adm-global') || session('auth_lider'))
                                         <li class="dropdown dropdown-submenu dropend">
                                             <a class="dropdown-item dropdown-toggle" href="#"
@@ -176,6 +148,35 @@
                                             </ul>
                                         </li>
                                     @endif
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-users-alt"></i>
+                                            Participantes / Líderes
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-location-point"></i>
+                                            Igrejas
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-youtube"></i>
+                                            Celebrações
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="https://30semanas.com.br/partilha">
+                                            <i class="uil uil-shield-check"></i>
+                                            Salas de Partilhas
+                                        </a>
+                                    </li>
+
                                 </ul>
                             </li>
                         @endif

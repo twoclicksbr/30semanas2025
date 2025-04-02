@@ -76,7 +76,8 @@
                                     </ul>
                                 </div>
 
-                                <button  id="clear-filters-wrapper" class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded d-none"
+                                <button id="clear-filters-wrapper"
+                                    class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded d-none"
                                     onclick="clearSearchFilters()">
                                     <i class="uil uil-times-circle"></i> Limpar Filtros
                                 </button>
@@ -509,8 +510,13 @@
                 // Atualiza botão de ações conforme seleção
                 updateBulkActions();
 
-                document.getElementById('record-info').innerText =
-                    `${typeParticipations.to - typeParticipations.from + 1} registros exibidos, de um total de ${typeParticipations.total}`;
+                if (typeParticipations.total === 0) {
+                    document.getElementById('record-info').innerText =
+                        'Mostrando 0 registros de 0 no total.';
+                } else {
+                    document.getElementById('record-info').innerText =
+                        `${typeParticipations.to - typeParticipations.from + 1} registros exibidos, de um total de ${typeParticipations.total}`;
+                }
 
                 renderPagination(typeParticipations.links);
                 document.getElementById('perPageSelect').value = perPage;
@@ -612,7 +618,10 @@
                     startY: 20,
                 });
 
-                doc.save("exportacao.pdf");
+                // doc.save("exportacao.pdf");
+
+                const pdfUrl = doc.output('bloburl');
+                window.open(pdfUrl, '_blank');
 
             } catch (error) {
                 console.error(error);
