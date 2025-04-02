@@ -7,7 +7,7 @@
 @section('content')
 
     <x-page-header>
-        {{-- Conteúdo opcional aqui --}}
+
     </x-page-header>
 
     <section class="wrapper mb-10">
@@ -76,17 +76,11 @@
                                     </ul>
                                 </div>
 
+                                <button  id="clear-filters-wrapper" class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded d-none"
+                                    onclick="clearSearchFilters()">
+                                    <i class="uil uil-times-circle"></i> Limpar Filtros
+                                </button>
 
-                                <div id="clear-filters-wrapper" class="d-none">
-                                    <button class="btn btn-sm btn-soft-ash btn-icon btn-icon-start rounded"
-                                        onclick="clearSearchFilters()">
-                                        <i class="uil uil-times-circle"></i> Limpar Filtros
-                                    </button>
-                                </div>
-
-                                {{-- <a class="btn btn-sm btn-soft-orange btn-icon btn-icon-start rounded" href="#">
-                                    <i class="uil uil-credit-card-search"></i> Pesquisa
-                                </a> --}}
                             </div>
 
                             <div class="table-responsive">
@@ -384,6 +378,13 @@
         const API_URL = `{{ config('api.base_url') }}/api/v1/type_participation`;
         const username = `{{ config('api.username') }}`;
         const token = `{{ config('api.token') }}`;
+        const idPerson = `{{ session('auth_id_person') }}`;
+
+        // console.log({
+        //     username,
+        //     token,
+        //     'id-person': idPerson
+        // });
 
         const FILTER_KEY = `filtros_{{ Route::currentRouteName() }}`;
 
@@ -444,7 +445,8 @@
                 const res = await axios.get(API_URL, {
                     headers: {
                         username,
-                        token
+                        token,
+                        'id-person': idPerson
                     },
                     params
                 });
@@ -533,7 +535,8 @@
                 const res = await axios.get(API_URL, {
                     headers: {
                         username,
-                        token
+                        token,
+                        'id-person': idPerson
                     },
                     params
                 });
@@ -575,7 +578,8 @@
                 const res = await axios.get(API_URL, {
                     headers: {
                         username,
-                        token
+                        token,
+                        'id-person': idPerson
                     },
                     params
                 });
@@ -690,13 +694,29 @@
             dropdownItems.forEach(item => item.classList.add('disabled'));
 
             try {
-                for (const id of ids) {
-                    await axios.put(`${API_URL}/${id}`, {
-                        active: status
+                for (let i = 0; i < ids.length; i++) {
+                    const currentId = ids[i];
+
+                    // Primeiro, busca os dados do item
+                    const res = await axios.get(`${API_URL}/${currentId}`, {
+                        headers: {
+                            username,
+                            token,
+                            'id-person': idPerson
+                        }
+                    });
+
+                    const item = res.data.type_participation;
+
+                    // Agora envia o PUT com name + active
+                    await axios.put(`${API_URL}/${currentId}`, {
+                        name: item.name,
+                        active: Number(status)
                     }, {
                         headers: {
                             username,
-                            token
+                            token,
+                            'id-person': idPerson
                         }
                     });
                 }
@@ -706,7 +726,8 @@
                 selectedIds = [];
 
             } catch (error) {
-                alert("Erro ao atualizar status");
+                const msg = error?.response?.data?.details || "Erro ao atualizar status";
+                showAlertModal(msg);
                 console.error(error);
             } finally {
                 // 🔓 Reabilita os itens do dropdown
@@ -731,7 +752,8 @@
                     axios.delete(`${API_URL}/${id}`, {
                         headers: {
                             username,
-                            token
+                            token,
+                            'id-person': idPerson
                         }
                     })
                 )).then(loadData).catch(() => alert('Erro ao excluir registros'));
@@ -928,7 +950,8 @@
                     data: payload,
                     headers: {
                         username,
-                        token
+                        token,
+                        'id-person': idPerson
                     }
                 })
                 .then(() => {
@@ -955,7 +978,8 @@
 
                         showAlertModal(msg);
                     } else {
-                        alert("Erro ao salvar");
+                        alert("Registros criados pela matriz não podem ser alterados por outras credenciais.");
+
                     }
                 });
 
@@ -994,7 +1018,8 @@
                     await axios.delete(`${API_URL}/${id}`, {
                         headers: {
                             username,
-                            token
+                            token,
+                            'id-person': idPerson
                         }
                     });
                 }
@@ -1016,7 +1041,8 @@
             axios.delete(`${API_URL}/${deleteId}`, {
                     headers: {
                         username,
-                        token
+                        token,
+                        'id-person': idPerson
                     }
                 })
                 .then(() => {
@@ -1043,6 +1069,5 @@
                 }
             }
         });
-
     </script>
 @endsection

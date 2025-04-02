@@ -35,9 +35,7 @@
 
                         @php
                             $urlShare =
-                                request()->path() === '/' || request()->path() === 'home' 
-                                    ? '#share' 
-                                    : '/home#share';
+                                request()->path() === '/' || request()->path() === 'home' ? '#share' : '/home#share';
                         @endphp
 
                         <li class="nav-item dropdown">
@@ -76,36 +74,6 @@
                                     aria-expanded="true">Meu Perfil</a>
                                 <ul class="dropdown-menu show" data-bs-popper="static">
 
-                                    @if (session('auth_adm-global') || session('auth_lider'))
-                                        <li class="dropdown dropdown-submenu dropend">
-                                            <a class="dropdown-item dropdown-toggle" href="#"
-                                                data-bs-toggle="dropdown"><i class="uil uil-bright"></i>
-                                                Administração</a>
-                                            <ul class="dropdown-menu">
-
-                                                @if (session('auth_adm-global'))
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item"
-                                                            href="#"><i
-                                                                class="uil uil-users-alt"></i> Participantes / Líderes</a>
-                                                    </li>
-
-                                                    <li class="nav-item">
-                                                        <a class="dropdown-item"
-                                                            href="#"><i
-                                                                class="uil uil-youtube"></i> Celebrações </a>
-                                                    </li>
-                                                @endif
-
-                                                <li class="nav-item">
-                                                    <a class="dropdown-item" href="https://30semanas.com.br/partilha"><i
-                                                            class="uil uil-shield-check"></i> Salas de Partilhas </a>
-                                                </li>
-
-                                            </ul>
-                                        </li>
-                                    @endif
-
                                     <li class="nav-item">
                                         <a class="dropdown-item" href="https://30semanas.com.br/entrar/editar"><i
                                                 class="uil uil-user"></i> Editar meus Dados</a>
@@ -127,6 +95,87 @@
                                                 class="uil uil-signout"></i> Sair da Partilha</a>
                                     </li>
 
+                                </ul>
+                            </li>
+
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle show" href="#" data-bs-toggle="dropdown"
+                                    aria-expanded="true">Administrar</a>
+                                <ul class="dropdown-menu show" data-bs-popper="static">
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-users-alt"></i>
+                                            Participantes / Líderes
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-location-point"></i>
+                                            Igrejas
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="#">
+                                            <i class="uil uil-youtube"></i>
+                                            Celebrações
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a class="dropdown-item" href="https://30semanas.com.br/partilha">
+                                            <i class="uil uil-shield-check"></i>
+                                            Salas de Partilhas
+                                        </a>
+                                    </li>
+
+                                    @if (session('auth_adm-global') || session('auth_lider'))
+                                        <li class="dropdown dropdown-submenu dropend">
+                                            <a class="dropdown-item dropdown-toggle" href="#"
+                                                data-bs-toggle="dropdown"><i class="uil uil-bright"></i>
+                                                Cadastros</a>
+                                            <ul class="dropdown-menu">
+
+                                                @if (session('auth_adm-global') || session('auth_adm-igreja'))
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item" href="#">
+                                                            Grupos
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item" href="#">
+                                                            Gêneros
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item" href="#">
+                                                            Tipos de Contatos
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item" href="/admin/type_participation">
+                                                            Tipos de Participação
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="nav-item">
+                                                        <a class="dropdown-item" href="#">
+                                                            Tipos de Usuários
+                                                        </a>
+                                                    </li>
+                                                @endif
+
+
+
+                                            </ul>
+                                        </li>
+                                    @endif
                                 </ul>
                             </li>
                         @endif
@@ -169,12 +218,12 @@
                                 <span class="mobile-text">Partilhar</span>
                             </a>
                         @else
-                            {{-- <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
+                            <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
                                 style="background-color: #f78b77; border-color: #f78b77;">
                                 <i class="uil uil-signin"></i>
                                 <span class="desktop-text">Entrar e Partilhar?</span>
                                 <span class="mobile-text">Entrar</span>
-                            </a> --}}
+                            </a>
                         @endif
 
                     </li>

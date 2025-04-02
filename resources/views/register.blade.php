@@ -3,15 +3,8 @@
 @section('title', 'Inscreva-se')
 
 @section('content')
-    <section class="wrapper image-wrapper bg-image bg-overlay bg-overlay-light-100 text-white"
-        data-image-src="https://30semanas.com.br/assets/img/photos/bg26.jpg"
-        style="background-image: url('https://30semanas.com.br/assets/img/photos/bg26.jpg');">
-        <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
-            <div class="row">
-                <div class="col-lg-8 mx-auto"></div>
-            </div>
-        </div>
-    </section>
+
+    @include('partials.painel')
 
     <section class="wrapper mb-10">
         <div class="container pb-14 pb-md-16">
@@ -50,10 +43,12 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="whatsapp" placeholder="WhatsApp" required>
+                                            <input class="form-control" type="text" id="whatsapp" placeholder="WhatsApp"
+                                                required>
                                         </div>
                                         <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia" required>
+                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia"
+                                                required>
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-orange w-100 mb-2"
@@ -108,8 +103,8 @@
                                                 placeholder="Complemento">
                                         </div>
                                         <div class="col-lg-8">
-                                            <input class="form-control" type="text" id="bairro"
-                                                placeholder="Bairro" required>
+                                            <input class="form-control" type="text" id="bairro" placeholder="Bairro"
+                                                required>
                                         </div>
                                     </div>
                                     <div class="row mb-2">

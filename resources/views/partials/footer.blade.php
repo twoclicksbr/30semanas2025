@@ -1,12 +1,12 @@
 <footer id="contact" class="bg-dark ">
     <div class="container pb-13 pb-md-15">
         <div class="card image-wrapper bg-full bg-image bg-overlay mt-n50p mx-md-5"
-            data-image-src="{{ asset('https://30semanas.com.br//assets/img/photos/bg27.jpg') }}"
-            style="background-image: url('https://30semanas.com.br//assets/img/photos/bg27.jpg');">
+            data-image-src="{{ asset('/assets/img/photos/bg27.jpg') }}"
+            style="background-image: url('/assets/img/photos/bg27.jpg');">
             <div
                 class="card-body p-6 p-md-11 d-lg-flex flex-row align-items-lg-center justify-content-md-between text-center text-lg-start">
 
-                <img src="{{ asset('https://30semanas.com.br//assets/img/photos/rede_inspire.png') }}" width="150">
+                <img src="{{ asset('/assets/img/rede_inspire.png') }}" width="150">
 
                 <div class="row">
                     <h4 class="display-6 mb-6 mb-lg-0 pe-lg-10 pe-xl-5 pe-xxl-18 text-white" style="margin-left: 20px;">
@@ -26,15 +26,15 @@
                 <div class="col-md-4 col-lg-3">
                     <div class="widget">
 
-                        <img class="mb-4" src="{{ asset('https://30semanas.com.br//assets/img/footer-logo.png') }}"
-                            srcset="{{ asset('https://30semanas.com.br//assets/img/footer-logo.png') }}" alt="">
+                        <img class="mb-4" src="{{ asset('/assets/img/footer-logo.png') }}"
+                            srcset="{{ asset('/assets/img/footer-logo.png') }}" alt="">
 
                         <p class="mb-4">© 2025 | 30 Semanas. <br class="d-none d-lg-block">Todos os Direitos
                             Reservados.</p>
 
                         <img class="mb-4" width="200"
-                            src="{{ asset('https://30semanas.com.br//assets/img/footer_logo_ic_branco.png') }}"
-                            srcset="{{ asset('https://30semanas.com.br//assets/img/footer_logo_ic_branco.png') }}"
+                            src="{{ asset('assets/img/footer_logo_ic_branco.png') }}"
+                            srcset="{{ asset('/assets/img/footer_logo_ic_branco.png') }}"
                             alt="">
 
                         <nav class="nav social social-white">

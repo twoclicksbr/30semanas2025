@@ -1,6 +1,6 @@
-@if(session()->has('auth_id_person'))
+@if (session()->has('auth_id_person'))
     @php
-        header("Location: " . route('home'));
+        header('Location: ' . route('home'));
         exit();
     @endphp
 @endif
@@ -11,18 +11,7 @@
 
 @section('content')
 
-    <section class="wrapper image-wrapper bg-image bg-overlay bg-overlay-light-100 text-white"
-        data-image-src="https://30semanas.com.br//assets/img/photos/bg26.jpg"
-        style="background-image: url('https://30semanas.com.br/assets/img/photos/bg26.jpg');">
-        <div class="container pt-17 pb-20 pt-md-19 pb-md-21 text-center">
-            <div class="row">
-                <div class="col-lg-8 mx-auto">
-                    {{-- <h1 class="display-1 mb-3 text-white"> Alex </h1> --}}
-
-                </div>
-            </div>
-        </div>
-    </section>
+    @include('partials.painel')
 
     <section class="wrapper mb-10">
         <div class="container pb-14 pb-md-16">
@@ -61,18 +50,24 @@
 
                                 <button type="submit"
                                     class="btn btn-orange btn-icon btn-icon-start rounded btn-login w-100 mb-2">
-                                    <i class="uil uil-signin"></i> Entrar e Partilhar
+                                    <i class="uil uil-signin"></i>
+                                    Entrar e Partilhar
                                 </button>
                             </form>
 
 
-                            <p class="mb-2 text-center">Não lembra sua senha? <a
-                                    href="/rec_password" class="hover text-orange">Perdi minha
-                                    senha</a></p>
+                            <p class="mb-2 text-center">
+                                Não lembra sua senha?
+                                <a href="/rec_password" class="hover text-orange">
+                                    Perdi minha senha
+                                </a>
+                            </p>
 
                             <p class="mb-1 mt-5 text-center">
-                                <a href="/" class="hover text-orange"><i class="uil uil-corner-up-left-alt"></i>
-                                    Voltar para Página Principal</a>
+                                <a href="/" class="hover text-orange">
+                                    <i class="uil uil-corner-up-left-alt"></i>
+                                    Voltar para Página Principal
+                                </a>
                             </p>
                         </div>
                     </div>

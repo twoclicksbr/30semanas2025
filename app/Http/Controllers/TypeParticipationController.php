@@ -228,7 +228,7 @@ class TypeParticipationController extends Controller
             if (!$typeParticipation) {
                 return response()->json([
                     'error' => 'Not Found',
-                    'details' => 'TypeParticipation not found'
+                    'details' => 'Registros criados pela matriz não podem ser alterados por outras credenciais.'
                 ], 404);
             }
 
@@ -276,16 +276,39 @@ class TypeParticipationController extends Controller
                 ], 401);
             }
 
-            $typeParticipation = TypeParticipation::where('id', $id)
-                ->where('id_credential', $idCredential)
-                ->first();
+            
 
+
+
+
+            $typeParticipation = TypeParticipation::find($id);
             if (!$typeParticipation) {
                 return response()->json([
                     'error' => 'Not Found',
-                    'details' => 'TypeParticipation not found'
+                    'details' => 'Registros criados pela matriz não podem ser alterados por outras credenciais.'
                 ], 404);
             }
+
+            // Bloqueia edição de registros criados pela matriz
+            if ($typeParticipation->id_credential == 1 && $idCredential != 1) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'details' => 'Registros criados pela matriz não podem ser alterados por outras credenciais.'
+                ], 403);
+            }
+
+            // Impede edição de registros que não pertencem à própria credencial
+            if ($typeParticipation->id_credential != $idCredential) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'details' => 'Você não tem permissão para editar este registro.'
+                ], 403);
+            }
+
+
+
+
+
 
             $validatedData = $request->validate([
                 'name' => 'required|string|unique:type_participation,name,' . $id,
@@ -348,16 +371,35 @@ class TypeParticipationController extends Controller
                 ], 401);
             }
 
-            $typeParticipation = TypeParticipation::where('id', $id)
-                ->where('id_credential', $idCredential)
-                ->first();
 
+
+
+            $typeParticipation = TypeParticipation::find($id);
             if (!$typeParticipation) {
                 return response()->json([
                     'error' => 'Not Found',
-                    'details' => 'TypeParticipation not found'
+                    'details' => 'Registros criados pela matriz não podem ser excluídos por outras credenciais.'
                 ], 404);
             }
+
+            // Bloqueia exclusão de registros da matriz
+            if ($typeParticipation->id_credential == 1 && $idCredential != 1) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'details' => 'Registros criados pela matriz não podem ser excluídos por outras credenciais.'
+                ], 403);
+            }
+
+            if ($typeParticipation->id_credential != $idCredential) {
+                return response()->json([
+                    'error' => 'Forbidden',
+                    'details' => 'Você não tem permissão para excluir este registro.'
+                ], 403);
+            }
+
+
+
+
 
             $oldData = $typeParticipation->toArray();
             $typeParticipation->delete();
