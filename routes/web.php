@@ -33,6 +33,7 @@ Route::get('/reset_password', [PasswordResetController::class, 'formReset'])->na
 
 
 Route::get('/admin/type_participation', function () { return view('admin.type_participation.type_participation'); });
+Route::get('/admin/group', function () { return view('admin.group.group'); });
 
 
 

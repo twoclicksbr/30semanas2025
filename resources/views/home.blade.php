@@ -141,7 +141,7 @@
 
                     <video width="70%" controls=""
                         style="border-radius: 84px 0px 0px 0px; margin-top: 60px; margin-bottom: 60px;">
-                        <source src="{{ asset('https://30semanas.com.br/assets/img/null923.mp4') }}" type="video/mp4">
+                        <source src="{{ asset('/assets/img/null923.mp4') }}" type="video/mp4">
                         <source src="{{ asset('movie.ogg') }}" type="video/ogg">
                     </video>
 
