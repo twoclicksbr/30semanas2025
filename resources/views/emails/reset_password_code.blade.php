@@ -9,7 +9,7 @@
 
     <div style="background: #ffffff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto;">
 
-        <img src="https://30semanas.com.br/assets/img/photos/bg26.jpg" alt="{{ config('app.name') }}" style="width: 100%; max-width: 600px; margin-bottom: 20px;">
+        <img src="https://30semanas.com.br/assets/img/banner.jpg" alt="{{ config('app.name') }}" style="width: 100%; max-width: 600px; margin-bottom: 20px;">
 
         <h2>Olá, {{ $userName }}!</h2>
         <p>Você solicitou a recuperação de senha no <strong>{{ config('app.name') }}</strong>.</p>

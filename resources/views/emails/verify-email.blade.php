@@ -10,7 +10,7 @@
     <div style="background: #ffffff; padding: 20px; border-radius: 10px; max-width: 600px; margin: 0 auto;">
 
         <!-- Adicionando a imagem no topo -->
-        <img src="https://30semanas.com.br/assets/img/photos/bg26.jpg" alt="{{ config('app.name') }}" style="width: 100%; max-width: 600px; margin-bottom: 20px;">
+        <img src="https://30semanas.com.br/assets/img/banner.jpg" alt="{{ config('app.name') }}" style="width: 100%; max-width: 600px; margin-bottom: 20px;">
 
         <h2>Olá, {{ $userName }}!</h2>
         <p>Parabéns por fazer a sua inscrição para o <strong>Ciclo do 30 Semanas 2025</strong> . Mas antes de tudo, precisamos verificar seu e-mail. Utilize o código de verificação:</p>

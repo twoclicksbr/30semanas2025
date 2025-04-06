@@ -78,7 +78,6 @@ class ParticipantController extends Controller
 
             $verificationCode = rand(100000, 999999);
 
-
             $personUser->verification_code = $verificationCode;
             $personUser->email_verified = 0;
             $personUser->save();

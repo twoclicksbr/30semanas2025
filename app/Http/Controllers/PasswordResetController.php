@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -82,7 +83,10 @@ class PasswordResetController extends Controller
 
         DB::table('person_user')
             ->where('email', $request->email)
-            ->update(['password' => bcrypt($request->password)]);
+            ->update([
+                'password' => bcrypt($request->password),
+                'email_verified' => 1
+            ]);
 
         DB::table('password_resets')->where('email', $request->email)->delete();
 
@@ -112,6 +116,9 @@ class PasswordResetController extends Controller
                 'verification_code' => null
             ]);
 
+        Log::info('Verificando código para: ' . $request->email);
+        Log::info('Token recebido: ' . $request->token);
+            
         return redirect()->route('login')->with('success', 'E-mail verificado com sucesso!');
     }
 
