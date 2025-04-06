@@ -211,9 +211,7 @@ class GroupController extends Controller
                 ], 401);
             }
 
-            $group = Group::where('id', $id)
-                ->where('id_credential', $idCredential)
-                ->first();
+            $group = Group::find($id);
 
             if (!$group) {
                 return response()->json([
@@ -222,7 +220,12 @@ class GroupController extends Controller
                 ], 404);
             }
 
-            // Log da ação
+            if ($group->id_credential === 1 && $idCredential !== 1) {
+                return response()->json([
+                    'message' => 'Permission denied.'
+                ], 403);
+            }
+
             LogHelper::store(
                 'show',
                 'group',
@@ -243,6 +246,7 @@ class GroupController extends Controller
         }
     }
 
+
     public function update(Request $request, $id)
     {
         try {
@@ -262,13 +266,23 @@ class GroupController extends Controller
                 ], 401);
             }
 
-            $group = Group::find($id);
+            // $group = Group::find($id);
+            $group = Group::findOrFail($id);
             if (!$group) {
                 return response()->json([
                     'error' => 'Not Found', 
                     'details' => 'Group not found'
                 ], 404);
             }
+
+
+            // ⛔ Bloqueia edição de registros da matriz por outras credenciais
+            if ($group->id_credential === 1 && session('id_credential') !== 1) {
+                return response()->json([
+                    'message' => 'Permission denied.',
+                ], 403);
+            }
+
 
             $validatedData = $request->validate([
                 'name' => 'sometimes|string|unique:group,name,' . $id, 

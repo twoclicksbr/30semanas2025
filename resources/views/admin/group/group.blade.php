@@ -602,7 +602,7 @@
                 } = window.jspdf;
                 const doc = new jsPDF();
 
-                doc.text("Exportação - Tipo de Participação", 14, 10);
+                doc.text("Exportação - Grupos", 14, 10);
 
                 const rows = data.map(item => [
                     item.id,
@@ -703,54 +703,44 @@
             dropdownItems.forEach(item => item.classList.add('disabled'));
 
             try {
+                let errorMessages = [];
+
                 for (let i = 0; i < ids.length; i++) {
                     const currentId = ids[i];
 
-                    // Primeiro, busca os dados do item
-                    const res = await axios.get(`${API_URL}/${currentId}`, {
-                        headers: {
-                            username,
-                            token,
-                            'id-person': idPerson
-                        }
-                    });
+                    try {
+                        await axios.put(`${API_URL}/${currentId}`, {
+                            active: Number(status)
+                        }, {
+                            headers: { username, token, 'id-person': idPerson }
+                        });
 
-                    const item = res.data.type_participation;
+                    } catch (err) {
+                        let msg = err?.response?.data?.message || `Erro ao atualizar ID ${currentId}`;
 
-                    // Agora envia o PUT com name + active
-                    await axios.put(`${API_URL}/${currentId}`, {
-                        name: item.name,
-                        active: Number(status)
-                    }, {
-                        headers: {
-                            username,
-                            token,
-                            'id-person': idPerson
+                        // Tradução personalizada
+                        if (msg === 'Permission denied.') {
+                            msg = 'Registros criados pela matriz não podem ser alterados por outras credenciais.';
                         }
-                    });
+
+                        errorMessages.push(`ID ${currentId}: ${msg}`);
+                    }
                 }
 
                 await loadData();
                 updateBulkActions();
                 selectedIds = [];
 
+                if (errorMessages.length) {
+                    showAlertModal(errorMessages.join('\n'));
+                }
+
             } catch (error) {
-                const msg = error?.response?.data?.details || "Erro ao atualizar status";
-                showAlertModal(msg);
+                showAlertModal("Erro geral ao atualizar registros.");
                 console.error(error);
-            } finally {
-                // 🔓 Reabilita os itens do dropdown
-                dropdownItems.forEach(item => item.classList.remove('disabled'));
-
-                // Desmarca todos os checkboxes (inclusive o mestre)
-                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
-                const masterCheckbox = document.querySelector('thead input[type="checkbox"]');
-                if (masterCheckbox) masterCheckbox.checked = false;
-
-                // Atualiza visualmente o botão de ações
-                updateBulkActions();
-
             }
+
+
         }
 
 

@@ -88,5 +88,32 @@ class PasswordResetController extends Controller
 
         return redirect()->route('login')->with('success', 'Senha alterada com Sucesso.');
     }
+
+    public function verifyEmailCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string'
+        ]);
+
+        $user = DB::table('person_user')
+            ->where('email', $request->email)
+            ->where('verification_code', $request->token)
+            ->first();
+
+        if (!$user) {
+            return back()->with('error', 'Código inválido.');
+        }
+
+        DB::table('person_user')
+            ->where('email', $request->email)
+            ->update([
+                'email_verified' => 1,
+                'verification_code' => null
+            ]);
+
+        return redirect()->route('login')->with('success', 'E-mail verificado com sucesso!');
+    }
+
 }
 

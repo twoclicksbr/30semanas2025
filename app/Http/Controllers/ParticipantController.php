@@ -9,7 +9,9 @@ use App\Models\Person;
 use App\Models\PersonUser;
 use App\Models\Contact;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ParticipantController extends Controller
 {
@@ -66,13 +68,28 @@ class ParticipantController extends Controller
                 'active' => 1
             ]);
 
-            PersonUser::create([
+            $personUser = PersonUser::create([
                 'id_credential' => session('id_credential'),
                 'id_person' => $person->id,
                 'email' => $request->email,
                 'password' => bcrypt($request->password),
                 'active' => 1
             ]);
+
+            $verificationCode = rand(100000, 999999);
+
+
+            $personUser->verification_code = $verificationCode;
+            $personUser->email_verified = 0;
+            $personUser->save();
+
+            Mail::send('emails.verify_email_code', [
+                'userName' => $request->name,
+                'token' => $verificationCode,
+            ], function ($message) use ($request) {
+                $message->to($request->email)->subject('Código de Verificação de E-mail');
+            });
+            
 
             Contact::create([
                 'id_credential' => session('id_credential'),
@@ -101,7 +118,12 @@ class ParticipantController extends Controller
 
             Log::info('Participant salvo com ID: ' . $person->id);
 
-            return response()->json(['message' => 'Participant created successfully.'], 201);
+            // return response()->json(['message' => 'Participant created successfully.'], 201);
+
+            return response()->json([
+                'redirect' => url('/verify_email_code?email=' . $request->email)
+            ], 201);
+            
 
         } catch (\Exception $e) {
             DB::rollBack();

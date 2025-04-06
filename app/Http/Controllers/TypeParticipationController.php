@@ -292,8 +292,8 @@ class TypeParticipationController extends Controller
             // Bloqueia edição de registros criados pela matriz
             if ($typeParticipation->id_credential == 1 && $idCredential != 1) {
                 return response()->json([
-                    'error' => 'Forbidden',
-                    'details' => 'Registros criados pela matriz não podem ser alterados por outras credenciais.'
+                    // 'error' => 'Forbidden',
+                    'message' => 'Registros criados pela matriz não podem ser alterados por outras credenciais.'
                 ], 403);
             }
 

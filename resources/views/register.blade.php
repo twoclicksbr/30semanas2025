@@ -232,11 +232,13 @@
                                 geral: [data.message]
                             });
                         }
+                    } else if (data.redirect) {
+                        window.location.href = data.redirect;
                     } else {
                         alert("Cadastro realizado com sucesso!");
                         document.getElementById("multiStepForm").reset();
-                        window.location.href = "/";
                     }
+
                 })
                 .catch(err => {
                     console.error("Erro:", err);

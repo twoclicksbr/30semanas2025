@@ -74,7 +74,7 @@
                                     aria-expanded="true">Meu Perfil</a>
                                 <ul class="dropdown-menu show" data-bs-popper="static">
 
-                                    <li class="nav-item">
+                                    {{-- <li class="nav-item">
                                         <a class="dropdown-item" href="https://30semanas.com.br/entrar/editar"><i
                                                 class="uil uil-user"></i> Editar meus Dados</a>
                                     </li>
@@ -88,7 +88,7 @@
                                     <li class="nav-item">
                                         <a class="dropdown-item" href="https://30semanas.com.br/entrar/editar_senha"><i
                                                 class="uil uil-data-sharing"></i> Alterar Senha</a>
-                                    </li>
+                                    </li> --}}
 
                                     <li class="nav-item">
                                         <a class="dropdown-item" href="{{ route('logout') }}"><i
@@ -99,7 +99,7 @@
                             </li>
 
 
-                            <li class="nav-item dropdown">
+                            {{-- <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle show" href="#" data-bs-toggle="dropdown"
                                     aria-expanded="true">Administrar</a>
                                 <ul class="dropdown-menu show" data-bs-popper="static">
@@ -178,7 +178,8 @@
                                     </li>
 
                                 </ul>
-                            </li>
+                            </li> --}}
+
                         @endif
 
                         {{-- @if (session()->has('auth_id_person'))
@@ -219,12 +220,12 @@
                                 <span class="mobile-text">Partilhar</span>
                             </a>
                         @else
-                            {{-- <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
+                            <a href="/login" class="btn btn-orange btn-icon btn-icon-start rounded"
                                 style="background-color: #f78b77; border-color: #f78b77;">
                                 <i class="uil uil-signin"></i>
                                 <span class="desktop-text">Entrar e Partilhar?</span>
                                 <span class="mobile-text">Entrar</span>
-                            </a> --}}
+                            </a>
                         @endif
 
                     </li>

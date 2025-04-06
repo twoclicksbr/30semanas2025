@@ -4,6 +4,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\SiteHomeController;
 use App\Http\Controllers\SiteLoginController;
 use App\Http\Controllers\SiteVideoController;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 
@@ -29,6 +30,14 @@ Route::post('/verify_token', [PasswordResetController::class, 'verifyToken'])->n
 
 Route::post('/reset_password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 Route::get('/reset_password', [PasswordResetController::class, 'formReset'])->name('password.reset');
+
+Route::post('/verify_email_code', [PasswordResetController::class, 'verifyEmailCode'])->name('verify.email.code');
+Route::get('/verify_email_code', [PasswordResetController::class, 'showTokenForm']);
+
+
+// Mail::raw('email_test', function ($message) {
+//     $message->to('alexalvesdealmeida@gmail.com')->subject('Teste');
+// });
 
 
 

@@ -13,8 +13,12 @@
                     <div class="card">
                         <div class="card-body p-11">
 
-                            <h2 class="mb-3 text-start">Informe o código enviado para seu e-mail</h2>
+                            <h2 class="mb-3 text-start">
+                                {{ request()->is('verify_email_code') ? 'Verificação de E-mail' : 'Informe o código enviado para seu e-mail' }}
+                            </h2>
 
+                            <p>Enviamos um código para seu e-mail. Insira-o abaixo para confirmar sua inscrição.</p>
+                            
                             @if (session('error'))
                                 <div class="alert alert-danger">{{ session('error') }}</div>
                             @endif
@@ -34,7 +38,8 @@
 
 
 
-                            <form id="verify-token-form" method="POST" action="{{ route('password.verify') }}">
+                            <form id="verify-token-form" method="POST"
+                                action="{{ request()->is('verify_email_code') ? route('verify.email.code') : route('password.verify') }}">
 
                                 @csrf
                                 <input type="hidden" name="email" value="{{ $email }}">
