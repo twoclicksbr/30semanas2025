@@ -28,7 +28,7 @@
                                             <input class="form-control" id="name" placeholder="Nome" required>
                                         </div>
                                         <div class="col-lg-3">
-                                            <label for="id_gender" class="form-label">Genero:</label>
+                                            <label for="id_gender" class="form-label">Gênero:</label>
                                             <select class="form-select" id="id_gender" required>
                                                 <option value="">Carregando...</option>
                                             </select>
