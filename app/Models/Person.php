@@ -19,6 +19,7 @@ class Person extends Model
         'id_church',
         'birthdate',
         'id_gender',
+        'id_group',
         'eklesia',
         'active'
     ];
@@ -75,5 +76,13 @@ class Person extends Model
     public function gender()
     {
         return $this->belongsTo(Gender::class, 'id_gender');
+    }
+
+    /**
+     * Relação com Group
+     */
+    public function group()
+    {
+        return $this->belongsTo(Gender::class, 'id_group');
     }
 }

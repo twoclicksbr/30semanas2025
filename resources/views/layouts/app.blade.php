@@ -5,10 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="An impressive and flawless site template that includes various UI elements and countless features, attractive ready-made blocks and rich pages, basically everything you need to create a unique and professional website.">
+        content="O 30 Semanas é um ministério cristão de cura e transformação emocional, baseado em princípios terapêuticos e fundamentado integralmente na Bíblia. Seu objetivo é restaurar relacionamentos com Deus, consigo mesmo e com o próximo, ajudando pessoas a superarem traumas, vícios, hábitos nocivos e feridas emocionais profundas.">
     <meta name="keywords"
-        content="bootstrap 5, business, corporate, creative, gulp, marketing, minimal, modern, multipurpose, one page, responsive, saas, sass, seo, startup, html5 template, site template">
-    <meta name="author" content="elemis">
+        content="Áreas de recuperação que são tratadas: Orfandade, Rejeição, Compulsão, Perfeccionismo, Sexualidade, Codependência, Ira, Baixa Autoestima, Dependência Química, Procrastinação, Ansiedade, Religiosidade, Luto/Perdas, Pânico/Medo/Depressão."
+    <meta name="Igreja da Cidade" content="30 Semanas">
     <title>30 Semanas | Igreja da Cidade - São José dos Campos - SP</title>
     <link rel="shortcut icon" href="{{ asset('assets/img/favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/plugins.css') }}">

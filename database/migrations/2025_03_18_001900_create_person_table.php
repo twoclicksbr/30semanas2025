@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_church'); // Igreja vinculada
             $table->date('birthdate')->nullable(); // Data de nascimento
             $table->unsignedBigInteger('id_gender')->nullable(); // Gênero
+            $table->unsignedBigInteger('id_group')->nullable(); // Gênero
             $table->string('eklesia')->nullable(); // Número de registro da pessoa na igreja
             $table->integer('active')->default(1); // Define status ativo/inativo
             $table->timestamps();
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->foreign('id_credential')->references('id')->on('credential')->onDelete('cascade');
             $table->foreign('id_church')->references('id')->on('church')->onDelete('cascade');
             $table->foreign('id_gender')->references('id')->on('gender')->onDelete('set null');
+            $table->foreign('id_group')->references('id')->on('group')->onDelete('set null');
         });
     }
 

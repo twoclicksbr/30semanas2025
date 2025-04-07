@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Log;
+use App\Models\Log as LogFacade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -116,8 +116,8 @@ class PasswordResetController extends Controller
                 'verification_code' => null
             ]);
 
-        Log::info('Verificando código para: ' . $request->email);
-        Log::info('Token recebido: ' . $request->token);
+        // LogFacade::info('Verificando código para: ' . $request->email);
+        // LogFacade::info('Token recebido: ' . $request->token);
             
         return redirect()->route('login')->with('success', 'E-mail verificado com sucesso!');
     }

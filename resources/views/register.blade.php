@@ -23,32 +23,43 @@
                                 <div class="step active" id="step1">
                                     <p class="lead mb-6 text-start">1. Dados Pessoais</p>
                                     <div class="row mb-2">
-                                        <div class="col-lg-8">
+                                        <div class="col-lg-5">
+                                            <label for="name" class="form-label">Nome:</label>
                                             <input class="form-control" id="name" placeholder="Nome" required>
                                         </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-3">
+                                            <label for="id_gender" class="form-label">Genero:</label>
                                             <select class="form-select" id="id_gender" required>
                                                 <option value="">Carregando...</option>
                                             </select>
                                         </div>
+                                        <div class="col-lg-4">
+                                            <label for="whatsapp" class="form-label">Whatsapp:</label>
+                                            <input class="form-control" type="text" id="whatsapp" placeholder="WhatsApp"
+                                                required>
+                                        </div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-6">
+                                            <label for="cpf" class="form-label">CPF:</label>
                                             <input class="form-control" type="text" id="cpf" name="cpf"
                                                 placeholder="CPF" required>
                                         </div>
                                         <div class="col-lg-6">
+                                            <label for="dt_nascimento" class="form-label">Nascimento:</label>
                                             <input class="form-control" type="date" id="dt_nascimento" required>
                                         </div>
                                     </div>
-                                    <div class="row mb-2">
-                                        <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="whatsapp" placeholder="WhatsApp"
-                                                required>
+                                    <div class="row mb-3">
+                                        <div class="col-lg-3">
+                                            <label for="id_group" class="form-label">Grupo:</label>
+                                            <select class="form-select" id="id_group" required>
+                                                <option value="">Carregando...</option>
+                                            </select>
                                         </div>
-                                        <div class="col-lg-6">
-                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia"
-                                                required>
+                                        <div class="col-lg-3" id="eklesia-wrapper" style="display: none;">
+                                            <label for="eklesia" class="form-label">Eklesia:</label>
+                                            <input class="form-control" type="text" id="eklesia" placeholder="Eklesia">
                                         </div>
                                     </div>
                                     <button type="button" class="btn btn-orange w-100 mb-2"
@@ -60,10 +71,12 @@
                                     <p class="lead mb-6 text-start">2. Criar Usuário</p>
                                     <div class="row mb-2">
                                         <div class="col-lg-8">
+                                            <label for="email_user" class="form-label">E-mail:</label>
                                             <input class="form-control" type="email" id="email_user" name="email_user"
                                                 placeholder="E-mail" required>
                                         </div>
                                         <div class="col-lg-4">
+                                            <label for="password" class="form-label">Senha:</label>
                                             <input class="form-control" type="password" id="password" placeholder="Senha"
                                                 required>
                                         </div>
@@ -85,34 +98,41 @@
                                     <p class="lead mb-6 text-start">3. Endereço</p>
                                     <div class="row mb-2">
                                         <div class="col-lg-3">
+                                            <label for="cep" class="form-label">CEP:</label>
                                             <input class="form-control" type="text" id="cep" placeholder="CEP"
                                                 required>
                                         </div>
                                         <div class="col-lg-7">
+                                            <label for="logradouro" class="form-label">Endereço:</label>
                                             <input class="form-control" type="text" id="logradouro"
                                                 placeholder="Logradouro" required>
                                         </div>
                                         <div class="col-lg-2">
+                                            <label for="numero" class="form-label">Número:</label>
                                             <input class="form-control" type="text" id="numero" placeholder="Nº"
                                                 required>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-4">
+                                            <label for="complemento" class="form-label">Complemento:</label>
                                             <input class="form-control" type="text" id="complemento"
                                                 placeholder="Complemento">
                                         </div>
                                         <div class="col-lg-8">
-                                            <input class="form-control" type="text" id="bairro" placeholder="Bairro"
-                                                required>
+                                            <label for="bairro" class="form-label">Bairro:</label>
+                                            <input class="form-control" type="text" id="bairro"
+                                                placeholder="Bairro" required>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-lg-9">
+                                            <label for="localidade" class="form-label">Cidade:</label>
                                             <input class="form-control" type="text" id="localidade"
                                                 placeholder="Cidade" required>
                                         </div>
                                         <div class="col-lg-3">
+                                            <label for="uf" class="form-label">UF:</label>
                                             <input class="form-control" type="text" id="uf" placeholder="UF"
                                                 required>
                                         </div>
@@ -192,6 +212,7 @@
                 name: document.getElementById("name").value,
                 cpf: document.getElementById("cpf").value,
                 id_gender: document.getElementById("id_gender").value,
+                id_group: document.getElementById("id_group").value,
                 birthdate: document.getElementById("dt_nascimento").value,
                 whatsapp: document.getElementById("whatsapp").value,
                 eklesia: document.getElementById("eklesia").value,
@@ -306,6 +327,37 @@
                 })
                 .catch(() => {
                     selectGender.innerHTML = '<option value="">Erro ao carregar gêneros</option>';
+                });
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const selectGroup = document.getElementById("id_group");
+
+            fetch("{{ $url }}/group/?sort_order=asc", {
+                    headers: {
+                        "Accept": "application/json",
+                        "username": "{{ $username }}",
+                        "token": "{{ $token }}",
+                        "id-person": 1
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    selectGroup.innerHTML = '<option value="">Selecione o Grupo</option>';
+
+                    if (data && data.groups && data.groups.data) {
+                        data.groups.data.forEach(g => {
+                            selectGroup.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+                        });
+                    } else {
+                        selectGroup.innerHTML = '<option value="">Nenhum grupo encontrado</option>';
+                    }
+                })
+                .catch(() => {
+                    selectGroup.innerHTML = '<option value="">Erro ao carregar grupos</option>';
                 });
         });
     </script>
@@ -449,6 +501,19 @@
                 .catch(() => {
                     console.error("Erro ao verificar Eklesia");
                 });
+        });
+    </script>
+
+    <script>
+        document.getElementById('id_group').addEventListener('change', function() {
+            const eklesiaField = document.getElementById('eklesia-wrapper');
+            const selectedValue = this.value;
+
+            if (selectedValue === '1') {
+                eklesiaField.style.display = 'block';
+            } else {
+                eklesiaField.style.display = 'none';
+            }
         });
     </script>
 

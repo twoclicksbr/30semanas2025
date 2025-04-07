@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Person;
 use App\Models\PersonUser;
 use App\Models\Contact;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log as LogFacade;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -34,6 +34,7 @@ class ParticipantController extends Controller
             'name' => 'required|string|max:255',
             'cpf' => 'required|unique:person,cpf',
             'id_gender' => 'required|integer|exists:gender,id',
+            'id_group' => 'required|integer|exists:group,id',
             'email' => 'required|email|unique:person_user,email',
             'password' => 'required|string|min:6',
             
@@ -62,6 +63,7 @@ class ParticipantController extends Controller
                 'name' => ucfirst($request->name),
                 'cpf' => $request->cpf,
                 'id_gender' => $request->id_gender,
+                'id_group' => $request->id_group,
                 'id_church' => $request->id_church,
                 'birthdate' => $request->birthdate,
                 'eklesia' => $request->eklesia,
@@ -115,7 +117,7 @@ class ParticipantController extends Controller
 
             DB::commit();
 
-            Log::info('Participant salvo com ID: ' . $person->id);
+            LogFacade::info('Participant salvo com ID: ' . $person->id);
 
             // return response()->json(['message' => 'Participant created successfully.'], 201);
 
